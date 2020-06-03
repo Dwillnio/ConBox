@@ -1,11 +1,11 @@
 #include "function.h"
 
-vec function::value(const vec& x) const {
-    if(x.dimension() != dim_from)
+vec function_p::value(const vec& x) {
+    if(x.dimension() != d_from())
         return vec(0);
 
     return func(x);
 }
 
 vec empty_func(const vec& v) {return vec(0);}
-function empty_func_class = function(empty_func, 0, 0);
+function_p empty_func_class = function_p(empty_func, 0, 0);

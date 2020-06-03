@@ -31,20 +31,20 @@ public:
     std::vector<time_value> get_uresult() {return u_values_;}
     std::vector<time_value> get_zresult() {return u_values_;}
 
-private:
+protected:
     dgl_solver* solver_;
     func_dgl* func_;
     controller* contr_;
 
     rnum t, d_t_, t_end_;
 
+    vec x_start_;
+    vec x_cur_;
+
     function* w_func_;
     function* z_func_;
 
     rnum u_max, u_min;
-
-    vec x_start_;
-    vec x_cur_;
 
     std::vector<time_value> x_values_;
     std::vector<time_value> u_values_;

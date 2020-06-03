@@ -5,33 +5,38 @@
 
 #include "base/vec.h"
 #include "base/matrix.h"
+#include "base/polynom.h"
+#include "base/func_dgl.h"
 #include "controller/dimensions.h"
 
-class linear_system
+class linear_system : public func_dgl
 {
 public:
-    linear_system(const matrix& A_, const matrix& B_, const matrix& C_, const matrix& E_)
-        : A(A_), B(B_), C(C_), E(E_)
-    {
-        d.dim_x = A.d_row();
-        d.dim_w = C.d_row();
-        d.dim_u = B.d_col();
-        d.dim_z = E.d_col();
+    linear_system(const matrix& A_, const matrix& B_, const matrix& C_)
+        : linear_system(A_, B_, C_, matrix(A_.rows(), 0)) {}
 
-        if(A_.d_col() != A_.d_row() || A.d_col() != d.dim_x)
+    linear_system(const matrix& A_, const matrix& B_, const matrix& C_, const matrix& E_)
+        : func_dgl(A.rows(), B.cols(), E.cols()), A(A_), B(B_), C(C_), E(E_)
+    {
+        d.dim_x = A.rows();
+        d.dim_w = C.rows();
+        d.dim_u = B.cols();
+        d.dim_z = E.cols();
+
+        if(A_.cols() != A_.rows() || A.cols() != d.dim_x)
             throw new std::runtime_error("LINSYSTEM A DIM ERROR");
 
-        if(B_.d_row() != d.dim_x || B.d_col() != d.dim_u)
+        if(B_.rows() != d.dim_x || B.cols() != d.dim_u)
             throw new std::runtime_error("LINSYSTEM B DIM ERROR");
 
-        if(C.d_row() != d.dim_w || C_.d_col() != d.dim_x)
+        if(C.rows() != d.dim_w || C_.cols() != d.dim_x)
             throw new std::runtime_error("LINSYSTEM C DIM ERROR");
 
-        if(E.d_row() != d.dim_x || E_.d_col() != d.dim_z)
+        if(E.rows() != d.dim_x || E_.cols() != d.dim_z)
             throw new std::runtime_error("LINSYSTEM E DIM ERROR");
     }
 
-    vec value(const vec& x, const vec& u, const vec& z) const;
+    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z) const;
     vec y_val(const vec& x) const;
 
     bool SISO() const;
@@ -42,17 +47,30 @@ public:
     linear_system observation_normal_form() const;
     linear_system diagonal_form() const;
     linear_system transform(const matrix& tr) const;
-    vec eigen_values() const;
-    std::vector<vec> eigen_vectors() const;
+    linear_system transform_inv(const matrix& tr) const;
+    VectorXcd eigen_values() const;
+    std::vector<VectorXcd> eigen_vectors() const;
 
-    matrix feedback_ackermann(vec eigenvalues) const;
-    matrix feedback_decoupling(vec eigenvalues) const;
+    matrix feedback_ackermann(const polynom& ch_p) const;
+    matrix feedback_decoupling(const polynom& ch_p) const;
     matrix feedback_disturbance() const;
+    matrix static_prefilter(const matrix& K) const;
+
+    linear_system feedback_system(const matrix& K) const;
+    linear_system feedback_system(const matrix& K, const matrix& B_new) const;
+
+    const matrix& A_mat() const {return A;}
+    const matrix& B_mat() const {return B;}
+    const matrix& C_mat() const {return C;}
+    const matrix& E_mat() const {return E;}
 
     matrix Q_B() const;
     matrix T_B() const;
     matrix Q_S() const;
     matrix T_S() const;
+
+    std::pair<matrix, std::vector<nnum>> H_y() const;
+    std::vector<nnum> rel_deg() const;
 
 protected:
     matrix A, B, C, E;

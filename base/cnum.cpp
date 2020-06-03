@@ -43,8 +43,9 @@ cnum cnum::operator* (cnum c) const
 
 cnum& cnum::operator*= (cnum c)
 {
-    this->real = real * c.real - imag * c.imag;
-    this->imag = real * c.imag + imag * c.real;
+    rnum temp = real * c.real - imag * c.imag;
+    imag = real * c.imag + imag * c.real;
+    real = temp;
 
     return *this;
 }

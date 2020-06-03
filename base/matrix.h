@@ -5,51 +5,53 @@
 #include <iostream>
 #include <cmath>
 
+#include <eigen3/Eigen/Dense>
+
 #include "definitions.h"
 #include "vec.h"
+#include "cnum.h"
 
-class matrix
+using Eigen::MatrixXd;
+using Eigen::VectorXcd;
+
+class matrix : public MatrixXd
 {
 public:
-    matrix(const std::vector<std::vector<rnum>>& entries)  : dim_row(entries.size()), values(entries)
+    matrix(const MatrixXd& m) : MatrixXd(m) {}
+
+    matrix(const std::vector<std::vector<rnum>>& entries)  : MatrixXd(entries.size(), entries[0].size())
     {
-        if(entries.size())
-            dim_col=entries[0].size();
-        else
-            dim_col = 0;
+        for(nnum i = 0; i < entries.size(); i++){
+            for(nnum j = 0; j < entries[0].size(); j++){
+                (*this)(i,j) = entries[i][j];
+            }
+        }
     }
 
-    matrix(const std::vector<rnum>& entries, nnum dim_r)  : dim_row(dim_r)
+    matrix(const std::vector<rnum>& entries, nnum dim_r)  : MatrixXd(dim_r, entries.size()/dim_r)
     {
         nnum sz = entries.size();
-        if(sz % dim_row)
+        if(sz % dim_r)
             throw new std::runtime_error("INVALID MATRIX CONSTRUCTOR INPUT");
 
-        dim_col = sz / dim_row;
-
-        for(nnum i=0; i<dim_row; i++){
-            values.push_back(std::vector<rnum> ());
-            for(nnum j=0; j<dim_col; j++) {
-                values[i].push_back(entries[dim_row*i + j]);
+        for(nnum i=0; i<rows(); i++){
+            for(nnum j=0; j<cols(); j++) {
+                (*this)(i,j) = entries[i*cols() + j];
             }
         }
     }
 
-    matrix(nnum dim_r, nnum dim_c) : dim_row(dim_r), dim_col(dim_c)
+    matrix(const vec& v)  : MatrixXd(v.dimension(), 1)
     {
-        for(nnum i=0; i<dim_row; i++){
-            values.push_back(std::vector<rnum> ());
-            for(nnum j=0; j<dim_col; j++) {
-                values[i].push_back(0);
-            }
-        }
+        *this = (*this).repl_col(0,v);
     }
 
-    std::vector<rnum>& operator[] (std::size_t n) {return values[n];}
-    std::vector<rnum> operator[] (std::size_t n) const {return values[n];}
+    matrix(nnum dim_r, nnum dim_c) : MatrixXd(MatrixXd::Zero(dim_r, dim_c)) {}
+
 
     matrix operator* (rnum d) const;
     matrix& operator*= (rnum d);
+
 
     matrix operator* (const matrix& m) const;
     matrix& operator*= (const matrix& m);
@@ -61,15 +63,12 @@ public:
     matrix operator- (const matrix& m) const;
     matrix& operator-= (const matrix& m);
 
-    nnum d_row() const {return dim_row;}
-    nnum d_col() const {return dim_col;}
+    matrix& operator=(const MatrixXd& m) {MatrixXd::operator=(m); return *this;}
 
     matrix repl_row(nnum r, vec v) const;
     matrix repl_col(nnum c, vec v) const;
-    vec get_row(nnum r) const;
-    vec get_col(nnum c) const;
-
-    vec to_vec() const;
+    vec col(nnum c) const;
+    vec row(nnum r) const;
 
     matrix del(nnum row, nnum col) const;
     matrix transpose() const;
@@ -78,21 +77,22 @@ public:
     matrix inverse() const;
 
     std::pair<matrix, matrix> QR_decomposition() const;
-    vec eigenvalues() const;    //only real eigenvalues
-    rnum max_eigenvalue() const;    //only real eigenvalues
-    std::vector<vec> eigenvectors() const; //only real eigenvalues
-    vec eigenvector_to(rnum eigenvalue) const; //only real eigenvalues
-    vec max_eigenvector() const; //only real eigenvalues
+
+    VectorXcd eigenvalues() const;
+    rnum max_eigenvalue() const;
+    std::vector<Eigen::VectorXcd> eigenvectors() const;
+    vec eigenvector_to(rnum eigenvalue) const;
+    vec max_eigenvector() const;
+
+    MatrixXd eigenrep() const {return MatrixXd(*(reinterpret_cast<const MatrixXd*>(this)));}
 
     static matrix unit(nnum d);
-
-private:
-    nnum dim_row, dim_col;
-    std::vector<std::vector<rnum>> values;
 };
+
 
 matrix operator* (rnum d, const matrix& m);
 vec operator* (const vec& v, const matrix& m);
+
 std::ostream& operator<<(std::ostream &os, const matrix& m);
 
 #endif // MATRIX_H

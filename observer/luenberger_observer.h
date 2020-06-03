@@ -4,55 +4,43 @@
 #include "observer.h"
 #include "base/matrix.h"
 #include "base/vec.h"
-#include "dgl_numeric/dgl_solver.h"
+#include "dgl_numeric/dgl_rungekutta.h"
 
-class luenberger_observer : public observer
+class luenberger_observer : public observer, public func_dgl
 {
 public:
-    luenberger_observer(dimensions d, const vec& x_est_start,
+    luenberger_observer(const vec& x_est_start, rnum d_t,
+                        const matrix& A, const matrix& B, const matrix& C, const matrix& L)
+        : luenberger_observer(x_est_start, d_t, A, B, C, matrix(A.rows(),0), L){}
+
+
+    luenberger_observer(const vec& x_est_start, rnum d_t,
                         const matrix& A, const matrix& B, const matrix& C,
                         const matrix& E, const matrix& L)
-        : luenberger_observer(d.dim_x, d.dim_u, d.dim_z, d.dim_w, x_est_start, A, B, C, E, L){}
-
-    luenberger_observer(dimensions d, const vec& x_est_start,
-                        const matrix& A, const matrix& B, const matrix& C, const matrix& L)
-        : luenberger_observer(d, x_est_start, A, B, C, matrix(d.dim_x, d.dim_z), L) {}
-
-
-    luenberger_observer(nnum dim_x, nnum dim_u, nnum dim_z, nnum dim_w, const vec& x_est_start,
-                        const matrix& A, const matrix& B, const matrix& C, const matrix& L)
-        : luenberger_observer(dim_x, dim_u, dim_z, dim_w, x_est_start, A, B, C, matrix(dim_x,dim_z), L) {}
-
-
-    luenberger_observer(nnum dim_x, nnum dim_u, nnum dim_z, nnum dim_w, const vec& x_est_start,
-                        const matrix& A, const matrix& B, const matrix& C,
-                        const matrix& E, const matrix& L)
-        : observer(dim_x, dim_u, dim_z, dim_w, x_est_start), A_(A), B_(B), C_(C), E_(E), L_(L)
+        : observer(A.rows(), B.cols(), E.cols(), C.rows(), x_est_start),
+          func_dgl(A.rows(), B.cols(), E.cols()), solver_(d_t, this),
+          A_(A), B_(B), C_(C), E_(E), L_(L)
     {
-        if(A_.d_col() != A_.d_row() || A.d_col() != dim_x)
-            throw new std::runtime_error("L-OBSERVER A DIM ERROR");
-
-        if(B_.d_row() != dim_x || B.d_col() != dim_u)
+        if(B_.rows() != dim_x_)
             throw new std::runtime_error("L-OBSERVER B DIM ERROR");
 
-        if(C.d_row() != dim_w || C_.d_col() != dim_x)
+        if(C_.cols() != dim_x_)
             throw new std::runtime_error("L-OBSERVER C DIM ERROR");
 
-        if(E.d_row() != dim_x || E_.d_col() != dim_z)
+        if(E.rows() != dim_x_)
             throw new std::runtime_error("L-OBSERVER E DIM ERROR");
 
-        if(L.d_row() != dim_x || L_.d_col() != dim_w)
+        if(L.rows() != dim_x_ || L_.cols() != dim_w_)
             throw new std::runtime_error("L-OBSERVER L DIM ERROR");
     }
 
-    virtual const vec& compute(const vec& x, const vec& u, const vec& z, const vec& w);
+    virtual const vec& compute(rnum t, const vec& x, const vec& u, const vec& z);
 
-    vec value(const vec& x, const vec& u, const vec& z);
+    vec value(rnum t, const vec& x, const vec& u, const vec& z);
 
 protected:
+    dgl_rungekutta solver_; //make changeable?
     matrix A_, B_, C_, E_, L_;
-
-    //dgl_solver_cl* solver;
 };
 
 #endif // LUENBERGER_OBSERVER_H

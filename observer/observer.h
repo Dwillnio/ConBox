@@ -3,6 +3,7 @@
 
 #include "base/definitions.h"
 #include "base/vec.h"
+#include "base/func_dgl.h"
 #include "controller/dimensions.h"
 
 class observer
@@ -20,14 +21,13 @@ public:
     observer(nnum dim_x, nnum dim_u, nnum dim_z, nnum dim_w)
         : dim_x_(dim_x), dim_u_(dim_u), dim_z_(dim_z), dim_w_(dim_w), x_est_(dim_x) {}
 
-    virtual const vec& compute(const vec& x, const vec& u, const vec& z, const vec& w) = 0;
+    virtual const vec& compute(rnum t, const vec& x, const vec& u, const vec& z) = 0;
 
     const vec& get() {return x_est_;}
 
 protected:
     nnum dim_x_, dim_u_, dim_z_, dim_w_;
     vec x_est_;
-    //vec x_est_start_;
 };
 
 #endif // OBSERVER_H

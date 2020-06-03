@@ -6,7 +6,7 @@
 class dgl_rungekutta : public dgl_solver
 {
 public:
-    dgl_rungekutta(rnum d_t, func_dgl& f) : dgl_solver(d_t, f) {};
+    dgl_rungekutta(rnum d_t, func_dgl* f) : dgl_solver(d_t, f) {};
 
     virtual vec step(rnum t, const vec& x, const vec& u, const vec& z) const;
 };

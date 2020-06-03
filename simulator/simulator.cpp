@@ -4,9 +4,9 @@
 simulator::simulator(dgl_solver* solver, func_dgl* func, controller* contr, vec& x_start,
                      rnum d_t, rnum t_end,
                      function* w_func, function* z_func)
-    : solver_(solver), func_(func), contr_(contr), x_start_(x_start),
-      d_t_(d_t), t_end_(t_end),
-      w_func_(w_func), z_func_(z_func), x_cur_(x_start)
+    : solver_(solver), func_(func), contr_(contr),
+      d_t_(d_t), t_end_(t_end), x_start_(x_start), x_cur_(x_start),
+      w_func_(w_func), z_func_(z_func)
 {
     t = 0;
 }

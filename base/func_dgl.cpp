@@ -1,8 +1,8 @@
 #include "func_dgl.h"
 
-vec func_dgl::value(rnum t, const vec& x, const vec& u, const vec& z) const
+vec func_dgl_p::value(rnum t, const vec& x, const vec& u, const vec& z) const
 {
-    if(x.dimension() != dim_x || u.dimension() != dim_u || z.dimension() != dim_z)
+    if(x.dimension() != d_x() || u.dimension() != d_u() || z.dimension() != d_z())
         return vec(0);
 
     return func(t, x, u, z);

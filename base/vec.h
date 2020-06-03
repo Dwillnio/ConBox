@@ -10,7 +10,7 @@
 class vec{
 public:
     vec(const std::vector<rnum>& v) : dim(v.size()), values(v) {}
-    vec(nnum i) : dim(i), values(std::vector<rnum>(i)) {}
+    explicit vec(nnum i) : dim(i), values(std::vector<rnum>(i,0)) {}
 
     nnum dimension() const {return dim;}
     rnum len() const;

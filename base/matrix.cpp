@@ -1,5 +1,6 @@
 #include "matrix.h"
 
+
 matrix matrix::operator* (rnum d) const
 {
    matrix m(*this);
@@ -9,25 +10,27 @@ matrix matrix::operator* (rnum d) const
 
 matrix& matrix::operator*= (rnum d)
 {
-    for(nnum i=0; i<dim_row; i++){
-        for(nnum j=0; j<dim_col; j++) {
-            (*this)[i][j] *= d;
+    for(nnum i=0; i<rows(); i++){
+        for(nnum j=0; j<cols(); j++) {
+            (*this)(i,j) *= d;
         }
     }
 
     return *this;
 }
 
+
 matrix matrix::operator* (const matrix& m) const
 {
-    if(dim_col != m.dim_row)
+    if(cols() != m.rows())
         throw new std::runtime_error("MATRIX DIM MISMATCH");
 
-    matrix w(dim_row, m.dim_col);
-    for(nnum i=0; i<w.dim_row; i++){
-        for(nnum j=0; j<w.dim_col; j++) {
-            for(nnum k=0; k<dim_row; k++){
-                w[i][j] += (*this)[i][k] * m[k][j];
+    matrix w(rows(), m.cols());
+    for(nnum i=0; i<w.rows(); i++){
+        for(nnum j=0; j<w.cols(); j++) {
+            w(i,j) = 0;
+            for(nnum k=0; k<cols(); k++){
+                w(i,j) += (*this)(i,k) * m(k,j);
             }
         }
     }
@@ -44,15 +47,15 @@ matrix& matrix::operator*= (const matrix& m)
 
 vec matrix::operator* (const vec& v) const
 {
-    if(dim_col != v.dimension())
+    if(cols() != v.dimension())
         throw new std::runtime_error("MATRIX VECTOR DIM MISMATCH");
 
-    vec u(v.dimension());
+    vec u(this->rows());
 
-    for(nnum i=0; i<dim_row; i++){
+    for(nnum i=0; i<rows(); i++){
         u[i] = 0;
-        for(nnum j=0; j<dim_col; j++) {
-            u[i] += (*this)[i][j] * v[j];
+        for(nnum j=0; j<cols(); j++) {
+            u[i] += (*this)(i,j) * v[j];
         }
     }
 
@@ -69,9 +72,9 @@ matrix matrix::operator+ (const matrix& m) const
 
 matrix& matrix::operator+= (const matrix& m)
 {
-    for(nnum i=0; i<dim_row; i++){
-        for(nnum j=0; j<dim_col; j++) {
-            (*this)[i][j] += m[i][j];
+    for(nnum i=0; i<rows(); i++){
+        for(nnum j=0; j<cols(); j++) {
+            (*this)(i,j) += m(i,j);
         }
     }
 
@@ -87,31 +90,33 @@ matrix matrix::operator- (const matrix& m) const
 
 matrix& matrix::operator-= (const matrix& m)
 {
-    for(nnum i=0; i<dim_row; i++){
-        for(nnum j=0; j<dim_col; j++) {
-            (*this)[i][j] -= m[i][j];
+    for(nnum i=0; i<rows(); i++){
+        for(nnum j=0; j<cols(); j++) {
+            (*this)(i,j) -= m(i,j);
         }
     }
 
     return *this;
 }
 
+
 matrix operator* (rnum d, const matrix& m)
 {
     return m*d;
 }
 
+
 vec operator* (const vec& v, const matrix& m)
 {
-    if(m.d_row() != v.dimension())
+    if(m.rows() != v.dimension())
         throw new std::runtime_error("MATRIX VECTOR DIM MISMATCH");
 
-    vec u(v.dimension());
+    vec u(m.cols());
 
-    for(nnum j=0; j<m.d_col(); j++) {
+    for(nnum j=0; j<m.cols(); j++) {
         u[j] = 0;
-        for(nnum i=0; i<m.d_row(); i++){
-            u[j] += m[i][j] * v[i];
+        for(nnum i=0; i<m.rows(); i++){
+            u[j] += m(i,j) * v[i];
         }
     }
 
@@ -121,10 +126,10 @@ vec operator* (const vec& v, const matrix& m)
 
 std::ostream& operator<<(std::ostream &os, const matrix& m)
 {
-    for(nnum i=0; i<m.d_row(); i++){
+    for(nnum i=0; i<m.rows(); i++){
         os << "| ";
-        for(nnum j=0; j<m.d_col(); j++) {
-            os << m[i][j];
+        for(nnum j=0; j<m.cols(); j++) {
+            os << m(i,j);
             os << " ";
         }
         os << "|";
@@ -138,77 +143,66 @@ matrix matrix::unit(nnum d)
 {
     matrix m(d,d);
     for(nnum i=0; i<d; i++) {
-        m[i][i] = 1;
+        m(i,i) = 1;
     }
     return m;
 }
 
 matrix matrix::repl_row(nnum r, vec v) const
 {
-    if(d_row() != v.dimension())
+    if(cols() != v.dimension())
         throw new std::runtime_error("RREPL MATRIX VECTOR DIM MISMATCH");
 
     matrix m(*this);
-    m[r] = v.get();
+    for(nnum i = 0; i < cols(); i++)
+        m(r,i) = v[i];
 
     return m;
 }
 
 matrix matrix::repl_col(nnum c, vec v) const
 {
-    if(d_col() != v.dimension())
+    if(rows() != v.dimension())
         throw new std::runtime_error("CREPL MATRIX VECTOR DIM MISMATCH");
 
     matrix m(*this);
-    for(nnum i = 0; i < this->d_col(); i++)
-        m[i][c] = v[i];
+    for(nnum i = 0; i < rows(); i++)
+        m(i,c) = v[i];
 
     return m;
 }
 
 
-vec matrix::get_row(nnum r) const
+vec matrix::col(nnum c) const
 {
-    if(r >= d_row())
-        throw new std::runtime_error("ROW TOO LARGE");
+    if(c >= cols())
+        throw new std::runtime_error("MATRIX COL DIM MISMATCH");
 
-    vec temp(d_col());
-    temp = (*this)[r];
-
-    return temp;
+    vec v(rows());
+    for(nnum i = 0; i < rows(); i++){
+        v[i] = (*this)(i,c);
+    }
+    return v;
 }
 
-vec matrix::get_col(nnum c) const
+vec matrix::row(nnum r) const
 {
-    if(c >= d_col())
-        throw new std::runtime_error("COL TOO LARGE");
+    if(r >= rows())
+        throw new std::runtime_error("MATRIX ROW DIM MISMATCH");
 
-    vec temp(d_row());
-    for(nnum i = 0; i < temp.dimension(); i++) {
-        temp[i] = (*this)[i][c];
+    vec v(cols());
+    for(nnum i = 0; i < cols(); i++){
+        v[i] = (*this)(r,i);
     }
-
-    return temp;
-}
-
-vec matrix::to_vec() const
-{
-    if(d_col()==1){
-        return get_col(0);
-    } else if(d_row() == 1){
-        return get_row(0);
-    } else {
-        throw new std::runtime_error("MATIX NOT IN VECTOR FORM");
-        return vec(0);
-    }
+    return v;
 }
 
 matrix matrix::del(nnum row, nnum col) const
 {
-    matrix m(dim_row-1, dim_col-1);
+    matrix m(rows()-1, cols()-1);
 
-    for(nnum i=0; i<dim_row; i++) {
-        for(nnum j=0; j<dim_col; j++) {
+    for(nnum i=0; i<rows(); i++) {
+        for(nnum j=0; j<cols(); j++) {
             nnum i_new = i;
             nnum j_new = j;
 
@@ -217,7 +211,7 @@ matrix matrix::del(nnum row, nnum col) const
             if(j > col) j_new--;
 
 
-            m[i_new][j_new] = (*this)[i][j];
+            m(i_new,j_new) = (*this)(i,j);
         }
     }
 
@@ -226,10 +220,10 @@ matrix matrix::del(nnum row, nnum col) const
 
 matrix matrix::transpose() const
 {
-    matrix m(dim_col, dim_row);
-    for(nnum i=0; i<dim_row; i++) {
-        for(nnum j=0; j<dim_col; j++) {
-            m[j][i] = (*this)[i][j];
+    matrix m(cols(), rows());
+    for(nnum i=0; i<rows(); i++) {
+        for(nnum j=0; j<cols(); j++) {
+            m(j,i) = (*this)(i,j);
         }
     }
     return m;
@@ -237,18 +231,18 @@ matrix matrix::transpose() const
 
 rnum matrix::det() const
 {
-    if(dim_row != dim_col)
+    if(rows() != cols())
         throw new std::runtime_error("DET NOT SQUARE");
 
-    if(dim_row == 1)
-        return (*this)[0][0];
+    if(rows() == 1)
+        return (*this)(0,0);
 
     rnum sum = 0;
 
-    for(nnum i=0; i < dim_col; i++) {
+    for(nnum i=0; i < cols(); i++) {
         matrix m = this->del(0,i);
-        if((*this)[0][i])
-            sum += (i%2?-1:1) * (*this)[0][i] * m.det();
+        if((*this)(0,i))
+            sum += (i%2?-1:1) * (*this)(0,i) * m.det();
     }
 
     return sum;
@@ -256,11 +250,13 @@ rnum matrix::det() const
 
 matrix matrix::adj() const
 {
-    matrix m(dim_col, dim_row);
+    if(cols() == 1 && rows() == 1)
+        return matrix::unit(1);
+    matrix m(cols(), rows());
     matrix temp(*this);
-    for(nnum i=0; i<dim_row; i++) {
-        for(nnum j=0; j<dim_col; j++) {
-            m[i][j] = std::pow(-1, i+j) * temp.del(i,j).det();
+    for(nnum i=0; i<rows(); i++) {
+        for(nnum j=0; j<cols(); j++) {
+            m(i,j) = std::pow(-1, i+j) * temp.del(i,j).det();
         }
     }
     return m.transpose();
@@ -274,48 +270,48 @@ matrix matrix::inverse() const
 
     matrix m = this->adj();
 
-    return m * (1/det);
+    return (1/det)*m;
 }
 
 std::pair<matrix, matrix> matrix::QR_decomposition() const
 {
-    if(dim_col != dim_row)
+    if(cols() != rows())
         throw new std::runtime_error("QRDECOMP MATRIX NOT SQUARE");
 
-    matrix U(dim_row, dim_col);
+    matrix U(rows(), cols());
     matrix A_T(this->transpose());
 
-    for(nnum i = 0; i<dim_row; i++){
-        vec a(A_T[i]);
+    for(nnum i = 0; i<rows(); i++){
+        vec a(A_T.row(i));
         vec u(a);
 
         for(nnum k = 0; k<i; k++){
-            vec u_k = vec(U[k]);
+            vec u_k = vec(U.row(k));
             vec proj = (u_k * a) / (u_k * u_k) * u_k;
             u += -1 * proj;
         }
 
-        for(nnum j = 0; j<dim_row; j++){
-            U[i][j] = u[j];
+        for(nnum j = 0; j<rows(); j++){
+            U(i,j) = u[j];
         }
     }
 
     matrix Q(U);
 
-    for(nnum i = 0; i<dim_row; i++){
-        vec u(Q[i]);
+    for(nnum i = 0; i<rows(); i++){
+        vec u(Q.row(i));
         rnum len = u.len();
 
-        for(nnum j = 0; j<dim_row; j++){
-            Q[i][j] /= len;
+        for(nnum j = 0; j<rows(); j++){
+            Q(i,j) /= len;
         }
     }
 
-    matrix R(dim_row, dim_col);
+    matrix R(rows(), cols());
 
-    for(nnum j = 0; j<dim_col; j++){
+    for(nnum j = 0; j<cols(); j++){
         for(nnum i = 0; i<=j; i++){
-            R[i][j] = vec(Q[i]) * vec(A_T[j]);
+            R(i,j) = vec(Q.row(i)) * vec(A_T.row(j));
         }
     }
 
@@ -325,22 +321,11 @@ std::pair<matrix, matrix> matrix::QR_decomposition() const
     return std::pair<matrix,matrix>(Q,R);
 }
 
-#define EV_QR_ITERATIONS 20
-vec matrix::eigenvalues() const
+
+VectorXcd matrix::eigenvalues() const
 {
-    if(dim_col != dim_row)
-        throw new std::runtime_error("EV CALC MATRIX NOT SQUARE");
+    VectorXcd v = MatrixXd::eigenvalues();
 
-    matrix m(*this);
-    for(nnum i = 0; i<EV_QR_ITERATIONS; i++) {
-        std::pair<matrix,matrix> qr = m.QR_decomposition();
-        m = qr.second * qr.first;
-    }
-
-    vec v(dim_col);
-    for(nnum i = 0; i < v.dimension(); i++) {
-        v[i] = m[i][i];
-    }
     return v;
 }
 
@@ -363,13 +348,15 @@ rnum matrix::max_eigenvalue() const
     return pr[index] / max_ev[index];
 }
 
-std::vector<vec> matrix::eigenvectors() const
+std::vector<Eigen::VectorXcd> matrix::eigenvectors() const
 {
-    std::vector<vec> v;
-    vec ev = eigenvalues();
-    for(nnum i = 0; i < ev.dimension(); i++) {
-        v.push_back(ev[i]);
+    Eigen::EigenSolver<MatrixXd> es(*this);
+
+    std::vector<Eigen::VectorXcd> v(es.eigenvectors().cols());
+    for(nnum i = 0; i < v.size(); i++){
+        v[i] = es.eigenvectors().col(i);
     }
+
     return v;
 }
 
@@ -377,15 +364,15 @@ std::vector<vec> matrix::eigenvectors() const
 #define EV_INVIT_OFFSET 0.01
 vec matrix::eigenvector_to(rnum eigenvalue) const
 {
-    if(dim_col != dim_row)
+    if(cols() != rows())
         throw new std::runtime_error("MAX EV CALC MATRIX NOT SQUARE");
 
-    vec v(dim_row);
+    vec v(rows());
     v[0] = 1;
-    if(dim_row > 1)
+    if(rows() > 1)
         v[1] = std::sqrt(M_PI);
 
-    matrix m(((*this) - ((eigenvalue-EV_INVIT_OFFSET)*matrix::unit(dim_row))).inverse());
+    matrix m(((*this) - ((eigenvalue-EV_INVIT_OFFSET)*matrix::unit(rows()))).inverse());
 
     for(nnum i = 0; i<EV_INVIT_ITERATIONS; i++) {
         vec temp = m*v;
@@ -398,12 +385,12 @@ vec matrix::eigenvector_to(rnum eigenvalue) const
 #define EV_POWER_ITERATIONS 20
 vec matrix::max_eigenvector() const
 {
-    if(dim_col != dim_row)
+    if(cols() != rows())
         throw new std::runtime_error("MAX EV CALC MATRIX NOT SQUARE");
 
-    vec v(dim_row);
+    vec v(rows());
     v[0] = 1;
-    if(dim_row > 1)
+    if(rows() > 1)
         v[1] = std::sqrt(M_PI);
 
     for(nnum i = 0; i<EV_POWER_ITERATIONS; i++) {
@@ -413,8 +400,6 @@ vec matrix::max_eigenvector() const
 
     return v;
 }
-
-
 
 
 

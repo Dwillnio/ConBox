@@ -13,7 +13,8 @@ public:
         : simulator(solver, func, contr, x_start, d_t, t_end, w_func, z_func),
           filter_(filter) {}
 
-    virtual void step();
+    //virtual void step();
+    virtual vec calc_u(const vec& z_cur, const vec& w_cur);
 
 protected:
     prefilter* filter_;

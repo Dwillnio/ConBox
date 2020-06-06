@@ -1,9 +1,7 @@
  #include "linear_system.h"
 
-vec linear_system::value(rnum t, const vec& x, const vec& u, const vec& z) const
+vec linear_system::value(rnum t, const vec& x, const vec& u, const vec& z)
 {
-    if(z.dimension())
-
     return A*x + B*u + E*z;
 }
 
@@ -42,7 +40,18 @@ matrix linear_system::Q_B() const
 
         return m;
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        matrix m(A.rows()*C.rows(),A.cols());
+        for(nnum i = 0; i < A.rows(); i++) {
+            matrix temp = C;
+            for(nnum k = 0; k < i; k++)
+                temp = temp * A;
+
+            for(nnum j = 0; j < temp.rows(); j++){
+                m = m.repl_row(i*C.rows()+j,temp.row(j));
+            }
+        }
+
+        return m;
     }
 }
 
@@ -85,7 +94,20 @@ matrix linear_system::Q_S() const
 
         return m;
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        matrix m(A.rows(),A.cols() * B.cols());
+        for(nnum i = 0; i < A.rows(); i++) {
+            matrix temp = B;
+
+            for(nnum k = 0; k < i; k++){
+                temp = A * temp;
+            }
+
+            for(nnum j = 0; j < temp.cols(); j++){
+                m = m.repl_col(i*B.cols()+j,temp.col(j));
+            }
+        }
+
+        return m;
     }
 }
 
@@ -107,7 +129,30 @@ matrix linear_system::T_S() const
 
         return T;
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        std::vector<nnum> ind = contr_ind();
+        matrix qsrinv = Q_S_red().inverse();
+
+        matrix t(B.cols(), A.cols());
+        nnum ind_sum = 0;
+        for(nnum i = 0; i < t.cols(); i++){
+            vec e(A.cols());
+            e[ind_sum + ind[i]] = 1;
+            ind_sum += ind[i];
+            t.repl_row(i, e * qsrinv);
+        }
+
+        matrix T(A.rows(), A.cols());
+        nnum sum = 0;
+        for(nnum i = 0; i < ind.size(); i++){
+            vec temp = t.row(i);
+            for(nnum j = 0; j < ind[i]; j++){
+                t.repl_row(sum + j, temp);
+                temp = temp * A;
+            }
+            sum += ind[i];
+        }
+
+        return  T;
     }
 }
 
@@ -117,7 +162,7 @@ bool linear_system::observable() const
     if(SISO()) {
         return std::abs(Q_B().det()) > OBSERVABLE_THRESHOLD;
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        return Q_B().rank() == A.rows();
     }
 }
 
@@ -127,7 +172,7 @@ bool linear_system::controllable() const
     if(SISO()) {
         return std::abs(Q_S().det()) > CONTROLLABLE_THRESHOLD;
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        return Q_S().rank() == A.rows();
     }
 }
 
@@ -139,7 +184,10 @@ linear_system linear_system::control_normal_form() const
         else
             throw new std::runtime_error("NOT CONTROLLABLE");
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        if(controllable())
+            return transform_inv(T_S());
+        else
+            throw new std::runtime_error("NOT CONTROLLABLE");
     }
 }
 
@@ -168,7 +216,6 @@ linear_system linear_system::diagonal_form() const
     transformed.C = (C.eigenrep() * tr).real();
 
     return transformed;
-
 }
 
 linear_system linear_system::transform(const matrix& tr) const
@@ -203,6 +250,32 @@ std::vector<VectorXcd> linear_system::eigen_vectors() const
     return A.eigenvectors();
 }
 
+matrix linear_system::H() const
+{
+    matrix qsrinv = Q_S_red().inverse();
+    std::vector<nnum> ind = contr_ind();
+
+    matrix matH(B.cols(), B.cols());
+
+    matrix t(B.cols(), A.cols());
+    nnum ind_sum = 0;
+    for(nnum i = 0; i < t.cols(); i++){
+        vec e(A.cols());
+        e[ind_sum + ind[i]] = 1;
+        ind_sum += ind[i];
+        t.repl_row(i, e * qsrinv);
+    }
+
+    for(nnum i = 0; i < ind.size(); i++){
+        matrix temp = matrix::unit(A.rows());
+        for(nnum j = 0; j < i; j++){
+            temp = temp * A;
+        }
+        matH.repl_row(i, t.row(i) * temp);
+    }
+
+    return matH;
+}
 
 matrix linear_system::feedback_ackermann(const polynom& ch_p)  const
 {
@@ -233,6 +306,39 @@ matrix linear_system::feedback_ackermann(const polynom& ch_p)  const
         return K.transpose();
     } else {
         throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+    }
+}
+
+matrix linear_system::feedback_ackermann(const std::vector<polynom>& pols) const
+{
+    if(SISO()){
+        if(pols.size() == 0){
+            throw new std::runtime_error("WRONG POLYNOM(ACKERMANN)");
+        }
+        return feedback_ackermann(pols[0]);
+    } else {
+        matrix qsrinv = Q_S_red().inverse();
+        std::vector<nnum> ind = contr_ind();
+        if(pols.size() != B.cols())
+            throw new std::runtime_error("WRONG AMOUNT OF POLYNOMS(ACKERMANN)");
+
+        for(nnum i = 0; i < ind.size(); i++){
+            if(pols[i].deg_c() != ind[i])
+                throw new std::runtime_error("WRONG POLYNOM DEGREE(ACKERMANN)");
+        }
+
+        matrix t = t_S();
+
+        matrix temp(B.cols(), A.rows());
+        for(nnum i = 0; i < B.cols(); i++){
+            matrix sum(A.rows(), A.cols());
+            for(nnum j = 0; j<=pols[i].deg_c(); j++){
+                sum += pols[i][j] * A.power(j);
+            }
+            temp.repl_row(i,t.row(i)*sum);
+        }
+
+        return H().inverse() * temp;
     }
 }
 
@@ -267,6 +373,39 @@ matrix linear_system::feedback_decoupling(const polynom& ch_p)  const
     }
 }
 
+matrix linear_system::feedback_decoupling(const std::vector<polynom>& pols) const
+{
+    if(SISO()){
+        if(pols.size() == 0){
+            throw new std::runtime_error("WRONG POLYNOM(FEEDBACK DECOUPLING)");
+        }
+        return feedback_decoupling(pols[0]);
+    } else {
+        std::pair<matrix, std::vector<nnum>> p = H_y();
+        matrix hy = p.first;
+        std::vector<nnum> ind = p.second;
+
+        if((long)pols.size() != B.cols())
+            throw new std::runtime_error("WRONG AMOUNT OF POLYNOMS(FEEDBACK DECOUPLING)");
+
+        for(nnum i = 0; i < ind.size(); i++){
+            if(pols[i].deg_c() != ind[i])
+                throw new std::runtime_error("WRONG POLYNOM DEGREE(FEEDBACK DECOUPLING)");
+        }
+
+        matrix temp(C.rows(), A.cols());
+        for(nnum i = 0; i < C.rows(); i++){
+            matrix sum(A.rows(), A.cols());
+            for(nnum j = 0; j<=pols[i].deg_c(); j++){
+                sum += pols[i][j] * A.power(j);
+            }
+            temp.repl_row(i,C.row(i)*sum);
+        }
+
+        return hy.inverse() * temp;
+    }
+}
+
 std::pair<matrix, std::vector<nnum>> linear_system::H_y() const
 {
     if(SISO()){
@@ -282,13 +421,94 @@ std::pair<matrix, std::vector<nnum>> linear_system::H_y() const
         return std::pair<matrix, std::vector<nnum>>((C*A_k*B),v);
 
     } else {
-        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+        if(B.cols() != C.rows())
+            throw new std::runtime_error("NUMBER OF INPUTS AND OUTPUTS NEED TO MATCH");
+
+        matrix hy(C.rows(), B.cols());
+        std::vector<nnum> ind;
+        for(nnum i = 0; i < B.cols(); i++){
+            nnum count = 0;
+            matrix A_k = matrix::unit(A.rows());
+            vec c = C.row(i);
+            vec b = B.col(i);
+            for(; count < A.rows(); count++){
+                if(std::abs(c*A_k*b) > 0.00000001)
+                    break;
+                A_k *= A;
+            }
+            ind.push_back(count);
+        }
+        for(nnum i = 0; i < hy.rows(); i++){
+            matrix Aexp = A.power(ind[i]-1);
+            vec c = C.row(i);
+            for(nnum j = 0; j < hy.cols(); j++){
+                vec b = B.col(i);
+                hy(i,j) = c * Aexp * b;
+            }
+        }
+
+        return std::pair<matrix, std::vector<nnum>>(hy, ind);
     }
 }
 
 std::vector<nnum> linear_system::rel_deg() const
 {
     return H_y().second;
+}
+
+std::vector<nnum> linear_system::contr_ind() const
+{
+    matrix qs = Q_S();
+
+    std::vector<nnum> ind(B.cols(), UINT_MAX);
+    nnum rank_prev = 0;
+    for(nnum i = 0; i < qs.cols(); i++){
+        matrix temp = qs.block(qs.rows(), i);
+        nnum rank_cur = temp.rank();
+        if(rank_prev == rank_cur && ind[i%B.cols()] == UINT_MAX){
+            ind[i%B.cols()] = i/B.cols() + 1;
+        }
+        rank_prev = rank_cur;
+    }
+
+    return ind;
+}
+
+
+matrix linear_system::Q_S_red() const
+{
+    matrix qsred(A.rows(), A.cols());
+
+    std::vector<nnum> ind = contr_ind();
+
+    nnum sum = 0;
+    for(nnum index: ind){
+        vec temp = B.col(index);
+        for(nnum j = 0; j < index; j++){
+            qsred.repl_col(sum + j, temp);
+            temp = A * temp;
+        }
+        sum += index;
+    }
+
+    return qsred;
+}
+
+matrix linear_system::t_S() const
+{
+    matrix qsrinv = Q_S_red().inverse();
+    std::vector<nnum> ind = contr_ind();
+
+    matrix t(B.cols(), A.cols());
+    nnum ind_sum = 0;
+    for(nnum i = 0; i < t.cols(); i++){
+        vec e(A.cols());
+        e[ind_sum + ind[i]] = 1;
+        ind_sum += ind[i];
+        t.repl_row(i, e * qsrinv);
+    }
+
+    return t;
 }
 
 matrix linear_system::feedback_disturbance()  const

@@ -19,7 +19,7 @@ public:
                         const matrix& E, const matrix& L)
         : observer(A.rows(), B.cols(), E.cols(), C.rows(), x_est_start),
           func_dgl(A.rows(), B.cols(), E.cols()), solver_(d_t, this),
-          A_(A), B_(B), C_(C), E_(E), L_(L)
+          A_(A), B_(B), C_(C), E_(E), L_(L), x_cur(vec(A.rows()))
     {
         if(B_.rows() != dim_x_)
             throw new std::runtime_error("L-OBSERVER B DIM ERROR");
@@ -36,11 +36,12 @@ public:
 
     virtual const vec& compute(rnum t, const vec& x, const vec& u, const vec& z);
 
-    vec value(rnum t, const vec& x, const vec& u, const vec& z);
+    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z);
 
 protected:
     dgl_rungekutta solver_; //make changeable?
     matrix A_, B_, C_, E_, L_;
+    vec x_cur;
 };
 
 #endif // LUENBERGER_OBSERVER_H

@@ -26,6 +26,7 @@ public:
 
     virtual void run();
     virtual void step();
+    virtual vec calc_u(const vec& z_cur, const vec& w_cur);
 
     std::vector<time_value> get_xresult() {return x_values_;}
     std::vector<time_value> get_uresult() {return u_values_;}

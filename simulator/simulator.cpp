@@ -30,7 +30,7 @@ void simulator::step()
 
     vec w_cur = w_func_->value(time_vec);
 
-    vec u_cur = contr_->compute(t, x_cur_, z_cur, w_cur);
+    vec u_cur = calc_u(z_cur, w_cur);
 
     vec x_next = solver_->step(t, x_cur_, u_cur, z_cur);
 
@@ -41,6 +41,13 @@ void simulator::step()
     t += d_t_;
     x_cur_ = x_next;
 }
+
+
+vec simulator::calc_u(const vec& z_cur, const vec& w_cur)
+{
+    return contr_->compute(t, x_cur_, z_cur, w_cur);
+}
+
 
 
 

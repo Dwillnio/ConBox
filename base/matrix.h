@@ -14,12 +14,13 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXcd;
 
+//add matrix exp, log, expand to full rank
 class matrix : public MatrixXd
 {
 public:
     matrix(const MatrixXd& m) : MatrixXd(m) {}
 
-    matrix(const std::vector<std::vector<rnum>>& entries)  : MatrixXd(entries.size(), entries[0].size())
+    explicit matrix(const std::vector<std::vector<rnum>>& entries)  : MatrixXd(entries.size(), entries[0].size())
     {
         for(nnum i = 0; i < entries.size(); i++){
             for(nnum j = 0; j < entries[0].size(); j++){
@@ -28,7 +29,7 @@ public:
         }
     }
 
-    matrix(const std::vector<rnum>& entries, nnum dim_r)  : MatrixXd(dim_r, entries.size()/dim_r)
+    explicit matrix(const std::vector<rnum>& entries, nnum dim_r)  : MatrixXd(dim_r, entries.size()/dim_r)
     {
         nnum sz = entries.size();
         if(sz % dim_r)
@@ -41,16 +42,21 @@ public:
         }
     }
 
-    matrix(const vec& v)  : MatrixXd(v.dimension(), 1)
+    explicit matrix(const vec& v)  : MatrixXd(v.dimension(), 1)
     {
         *this = (*this).repl_col(0,v);
     }
 
-    matrix(nnum dim_r, nnum dim_c) : MatrixXd(MatrixXd::Zero(dim_r, dim_c)) {}
+    explicit matrix(nnum dim_r, nnum dim_c) : MatrixXd(MatrixXd::Zero(dim_r, dim_c)) {}
 
 
     matrix operator* (rnum d) const;
     matrix& operator*= (rnum d);
+    matrix operator* (int d) const;
+    matrix& operator*= (int d);
+    matrix operator* (nnum d) const;
+    matrix& operator*= (nnum d);
+
 
 
     matrix operator* (const matrix& m) const;
@@ -75,6 +81,20 @@ public:
     rnum det() const;
     matrix adj() const;
     matrix inverse() const;
+    matrix power(nnum i) const;
+
+    matrix extend() const;  //if rows < cols: adds row that raises rank
+    matrix extend_full() const; //extend() until rows = cols
+
+#define STANDARD_CUTOFF 10
+    matrix exp(nnum cutoff = STANDARD_CUTOFF) const;
+    matrix log(nnum cutoff = STANDARD_CUTOFF) const;
+
+    matrix block(nnum rows, nnum cols) const {return block(0,0,rows,cols);}
+    matrix block(nnum offset_rows, nnum offset_cols, nnum rows, nnum cols) const;
+
+    nnum rank() const;
+    nnum kerneldim() const;
 
     std::pair<matrix, matrix> QR_decomposition() const;
 
@@ -91,6 +111,8 @@ public:
 
 
 matrix operator* (rnum d, const matrix& m);
+matrix operator* (int d, const matrix& m);
+matrix operator* (nnum d, const matrix& m);
 vec operator* (const vec& v, const matrix& m);
 
 std::ostream& operator<<(std::ostream &os, const matrix& m);

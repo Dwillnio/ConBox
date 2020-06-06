@@ -24,8 +24,12 @@
 #include "test/test_cnum.h"
 #include "test/test_disturbance.h"
 #include "test/test_linear_system.h"
+#include "test/test_matrix.h"
+#include "test/test_observer.h"
 
 using namespace std;
+
+//TODO: tests for different systems, observer, mimo, 2dof trajectory control, parameter estimation, digital control, optimization, nonlinear, animation gui
 
 vec func_e(rnum t, const vec& x, const vec& u, const vec& z)
 {
@@ -127,12 +131,17 @@ void display_result(int argc, char** argv, QLineSeries* data_x, QLineSeries* dat
 
 int main(int argc, char** argv)
 {
-    //linear_system_test_2();
-    //return 0;
+    try{
+    luenberger_observer_test_1(argc, argv);
+    return 0;
+    } catch (const std::runtime_error& ex) {
+        std::cout << ex.what() << std::endl;
+    }
 
     rnum d_t = 0.01;
     rnum y_target = -2;
 
+    //linear_system osc = harm_osc();
     func_dgl_p func(func_osc_contrl, 2, 1, 0);
 
     const_function w_func(y_target, 1, 1);
@@ -162,26 +171,6 @@ int main(int argc, char** argv)
     polynom q(nq);
     std::cout << p << "\n" << q << "\n" << p * q << "\n" << polynom::zeros2polynom(zeros) << "\n";
     return 0;
-
-    cnum c(1,1), d(2,0), e(1,-1);
-    rnum r(2);
-    Eigen::MatrixXcd z;
-    vec v(std::vector<rnum>({1,2,3}));
-    matrix m(std::vector<rnum>({1,2,3,4,5,6,7,8,9}), 3);
-    matrix a(std::vector<rnum>({-1/sqrt(2),-1/sqrt(2),0,1/sqrt(2),-1/sqrt(2),0,0,0,1}), 3);
-    matrix temp(m);
-    matrix b({12,-51,4,6,167,-68,-4,24,-41}, 3);
-    //std::cout << 2.0*matrix::unit(4);
-    //std::cout << b.det() << "\n";
-    //std::cout << b.inverse();
-    std::cout << b;
-    std::pair<matrix,matrix> qr = b.QR_decomposition();
-    std::cout << qr.first << qr.second << qr.first * qr.second;
-    for(nnum i = 0; i<20; i++) {
-        qr = b.QR_decomposition();
-        b = qr.second * qr.first;
-    }
-    std::cout << qr.second;
 
     //std::cout << c/c << "\n";
     /*

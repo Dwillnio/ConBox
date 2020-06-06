@@ -16,7 +16,7 @@ public:
         : linear_system(A_, B_, C_, matrix(A_.rows(), 0)) {}
 
     linear_system(const matrix& A_, const matrix& B_, const matrix& C_, const matrix& E_)
-        : func_dgl(A.rows(), B.cols(), E.cols()), A(A_), B(B_), C(C_), E(E_)
+        : func_dgl(A_.rows(), B_.cols(), E_.cols()), A(A_), B(B_), C(C_), E(E_)
     {
         d.dim_x = A.rows();
         d.dim_w = C.rows();
@@ -36,7 +36,7 @@ public:
             throw new std::runtime_error("LINSYSTEM E DIM ERROR");
     }
 
-    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z) const;
+    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z);
     vec y_val(const vec& x) const;
 
     bool SISO() const;
@@ -52,7 +52,9 @@ public:
     std::vector<VectorXcd> eigen_vectors() const;
 
     matrix feedback_ackermann(const polynom& ch_p) const;
+    matrix feedback_ackermann(const std::vector<polynom>& pols) const;
     matrix feedback_decoupling(const polynom& ch_p) const;
+    matrix feedback_decoupling(const std::vector<polynom>& pols) const;
     matrix feedback_disturbance() const;
     matrix static_prefilter(const matrix& K) const;
 
@@ -69,8 +71,15 @@ public:
     matrix Q_S() const;
     matrix T_S() const;
 
+    matrix t_S() const;
+    matrix Q_S_red() const;
+    matrix H() const;
+
+    matrix L() const;
+
     std::pair<matrix, std::vector<nnum>> H_y() const;
     std::vector<nnum> rel_deg() const;
+    std::vector<nnum> contr_ind() const;
 
 protected:
     matrix A, B, C, E;

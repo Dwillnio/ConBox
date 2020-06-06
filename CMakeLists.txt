@@ -59,7 +59,6 @@ add_executable(ConBox
 
     test/test.h
     test/test_matrix.cpp
-    test/test_function.cpp
     test/test_cnum.cpp
     test/test_numeric.cpp
     test/test_dgl_solver.cpp

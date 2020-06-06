@@ -1,9 +1,7 @@
 #include "harm_osc.h"
 
-linear_system harm_osc()
+linear_system harm_osc(rnum alpha, rnum beta, rnum gamma)
 {
-    rnum alpha = 1, beta = 0.2, gamma = 0.1;
-
     matrix A = matrix(std::vector<rnum>{0,1,-alpha,-beta},2);
 
     matrix B = matrix(std::vector<rnum>{0, gamma}, 2);

@@ -9,7 +9,7 @@ public:
     func_dgl(int d_x, int d_u, int d_z) :
         dim_x(d_x), dim_u(d_u), dim_z(d_z) {};
 
-    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z) const = 0;
+    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z) = 0;
 
     unsigned int d_x() const {return dim_x;}
     unsigned int d_u() const {return dim_u;}
@@ -25,7 +25,7 @@ public:
     func_dgl_p(vec (*f) (rnum t, const vec& x, const vec& u, const vec& z), int d_x, int d_u, int d_z) :
         func_dgl(d_x, d_u, d_z), func(f){};
 
-    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z) const;
+    virtual vec value(rnum t, const vec& x, const vec& u, const vec& z);
 
 private:
     vec (*func) (rnum t, const vec& x, const vec& u, const vec& z);

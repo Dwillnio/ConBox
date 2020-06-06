@@ -1,5 +1,6 @@
 #include "simulator_prefilter.h"
 
+/*
 void simulator_prefilter::step()
 {
     vec time_vec(1);
@@ -23,4 +24,10 @@ void simulator_prefilter::step()
 
     t += d_t_;
     x_cur_ = x_next;
+}
+*/
+
+vec simulator_prefilter::calc_u(const vec& z_cur, const vec& w_cur)
+{
+    return contr_->compute(t, x_cur_, z_cur, w_cur) + filter_->compute(t, w_cur);
 }

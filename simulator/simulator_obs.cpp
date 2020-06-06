@@ -1,5 +1,6 @@
 #include "simulator_obs.h"
 
+/*
 void simulator_obs::step()
 {
     vec time_vec(1);
@@ -26,4 +27,12 @@ void simulator_obs::step()
     t += d_t_;
     x_cur_ = x_next;
 }
+*/
 
+vec simulator_obs::calc_u(const vec& z_cur, const vec& w_cur)
+{
+    vec u_cur = contr_->compute(t, observer_->get(), z_cur, w_cur) + filter_->compute(t, w_cur);
+    observer_->compute(t, x_cur_, u_cur, z_cur);
+    x_estimates.push_back(time_value(t, observer_->get()));
+    return u_cur;
+}

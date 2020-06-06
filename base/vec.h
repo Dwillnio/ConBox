@@ -9,7 +9,7 @@
 
 class vec{
 public:
-    vec(const std::vector<rnum>& v) : dim(v.size()), values(v) {}
+    vec(const std::initializer_list<rnum>& v) : dim(v.size()), values(v) {}
     explicit vec(nnum i) : dim(i), values(std::vector<rnum>(i,0)) {}
 
     nnum dimension() const {return dim;}

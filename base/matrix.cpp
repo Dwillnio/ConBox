@@ -20,6 +20,87 @@ matrix& matrix::operator*= (rnum d)
 }
 
 
+matrix matrix::operator* (int d) const
+{
+    return (double)d * *this;
+}
+
+matrix& matrix::operator*= (int d)
+{
+    *this *= (double)d;
+    return *this;
+}
+
+matrix operator* (int d, const matrix& m)
+{
+    return m * d;
+}
+
+matrix matrix::operator* (nnum d) const
+{
+    return (double)d * *this;
+}
+
+matrix& matrix::operator*= (nnum d)
+{
+    *this *= (double)d;
+    return *this;
+}
+
+matrix operator* (nnum d, const matrix& m)
+{
+    return m * d;
+}
+
+matrix matrix::power(nnum i) const
+{
+    if(cols() != rows())
+        throw new std::runtime_error("MATRIX NOT SQUARE(POW)");
+
+    matrix ret = matrix::unit(this->rows());
+    for(nnum j = 0; j < i; j++)
+        ret = ret * (*this);
+
+    return ret;
+}
+
+nnum factorial(nnum n)
+{
+    if(n == 1 || n == 0)
+        return 1;
+    return n*factorial(n-1);
+}
+
+matrix matrix::exp(nnum cutoff) const
+{
+    if(cols() != rows())
+        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
+
+    matrix temp(rows(),cols());
+    for(; cutoff >=0 ; cutoff--){
+        temp = temp * (*this);
+        temp += (1/factorial(cutoff)) * matrix::unit(rows());
+    }
+
+    return temp;
+}
+
+matrix matrix::log(nnum cutoff) const
+{
+    if(cols() != rows())
+        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
+
+    matrix R = (matrix::unit(rows()) - *this) * (*this + matrix::unit(rows())).inverse();
+
+    matrix sum(rows(), cols());
+    for(nnum i = 1; i <= cutoff; i++){
+        sum += 1/(2*i + 1) * R.power(2*i + 1);
+    }
+
+    return -2 * sum;
+}
+
+
 matrix matrix::operator* (const matrix& m) const
 {
     if(cols() != m.rows())
@@ -148,6 +229,21 @@ matrix matrix::unit(nnum d)
     return m;
 }
 
+matrix matrix::block(nnum offset_rows, nnum offset_cols, nnum r, nnum c) const
+{
+    if(r+offset_rows > rows() || c + offset_cols > cols())
+        throw new std::runtime_error("MATRIX BLOCK OUT OF BOUNDS");
+
+    matrix m(r, c);
+    for(nnum i = 0; i < r; i++){
+        for(nnum j = 0; j < c; j++){
+            m(i,j) = (*this)(i+offset_rows, j+offset_cols);
+        }
+    }
+
+    return m;
+}
+
 matrix matrix::repl_row(nnum r, vec v) const
 {
     if(cols() != v.dimension())
@@ -271,6 +367,19 @@ matrix matrix::inverse() const
     matrix m = this->adj();
 
     return (1/det)*m;
+}
+
+nnum matrix::rank() const
+{
+
+    Eigen::FullPivLU<MatrixXd> lu_decomp(*this);
+    return lu_decomp.rank();
+}
+
+nnum matrix::kerneldim() const
+{
+    Eigen::FullPivLU<MatrixXd> lu_decomp(*this);
+    return lu_decomp.dimensionOfKernel();
 }
 
 std::pair<matrix, matrix> matrix::QR_decomposition() const

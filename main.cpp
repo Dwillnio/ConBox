@@ -27,6 +27,9 @@
 #include "test/test_matrix.h"
 #include "test/test_observer.h"
 
+#include "example/inverted_pend_lin.h"
+#include "example/pendel_wagen_lin.h"
+
 using namespace std;
 
 //TODO: tests for different systems, observer, mimo, 2dof trajectory control, parameter estimation, digital control, optimization, nonlinear, animation gui
@@ -131,46 +134,80 @@ void display_result(int argc, char** argv, QLineSeries* data_x, QLineSeries* dat
 
 int main(int argc, char** argv)
 {
-    try{
-    luenberger_observer_test_1(argc, argv);
-    return 0;
-    } catch (const std::runtime_error& ex) {
-        std::cout << ex.what() << std::endl;
-    }
+//    matrix A({0,3,2, 1,0,4, 0,1,0}, 3), B({0,1,2, 0,0,1, 1,0,0}, 3), C(matrix::unit(3));
+//    linear_system exampl(A,B,C);
+//    auto cind = exampl.contr_ind();
+//    for(nnum i: cind)
+//        std::cout << i << " , ";
+//    std::cout << std::endl;
 
+//    matrix A2({0,0,1,0, 1,0,2,0, 0,1,3,1, 0,0,-1,2}, 4), B2({1,0, 0,0, 0,0, 0,1}, 4), C2(matrix::unit(4));
+//    linear_system exampl2(A2,B2,C2);
+//    auto cind2 = exampl2.contr_ind();
+//    for(nnum i: cind2)
+//        std::cout << i << " , ";
+//    std::cout << std::endl;
+
+//    std::cout << exampl2.control_normal_form().A_mat();
+
+    linear_system invpend = inv_pend_lin(false);
     rnum d_t = 0.01;
-    rnum y_target = -2;
-
-    //linear_system osc = harm_osc();
-    func_dgl_p func(func_osc_contrl, 2, 1, 0);
-
+    rnum y_target = 1;
     const_function w_func(y_target, 1, 1);
+    matrix K(invpend.feedback_ackermann(polynom::zeros2polynom({-1,-1,-1,-1})));
+    state_controller contr(4, 1, 0, 1, K);
+    vec x_start({0,0,0.1,0});
+    vec x_est_start({0,0,0,0});
 
-    state_controller contr(2, 1, 0, 1, matrix(std::vector<rnum>{0,18},1));
-
-    vec x_start(2);
-    x_start[0] = 1;
-    x_start[1] = 0;
-
-    dgl_rungekutta solver(d_t, &func);
-
-    stationary_filter filt(1,1, matrix(std::vector<rnum>{10},1));
-
-    simulator_prefilter sim(&solver, &func, &contr, x_start, d_t, 10, &filt, &w_func);
+    dgl_rungekutta solver(d_t, &invpend);
+    stationary_filter filt(1,1, invpend.static_prefilter(K));
+    matrix L = invpend.L(polynom::zeros2polynom({-5,-5,-5,-5}));
+    luenberger_observer obs(x_est_start, d_t, invpend.A_mat(), invpend.B_mat(), invpend.C_mat(), L);
+    simulator_obs sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &obs, &w_func);
+    //simulator_prefilter sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &w_func);
     sim.run();
 
     std::vector<time_value> x_result = sim.get_xresult();
     std::vector<time_value> u_result = sim.get_uresult();
+    std::vector<time_value> x_est_result = sim.get_x_estimates();
+    //std::vector<time_value> x_est_result = sim.get_xresult();
     visualizer display(argc, argv);
-    //display.visualize_result(&u_result, 0, &x_result, 0);
-    display.visualize_result(x_result, std::vector<nnum>({0,1}), u_result, std::vector<nnum>({0}), x_result, std::vector<nnum>({0}));
+    display.visualize_result(x_result, std::vector<nnum>({2}), u_result, std::vector<nnum>({0}), x_result, std::vector<nnum>({2}), x_est_result);
     return 0;
 
-    std::vector<rnum> np({1,1,1}), nq({1,2}), zeros({-1,-2});
-    polynom p(np);
-    polynom q(nq);
-    std::cout << p << "\n" << q << "\n" << p * q << "\n" << polynom::zeros2polynom(zeros) << "\n";
-    return 0;
+//    rnum d_t = 0.01;
+//    rnum y_target = -2;
+
+//    //linear_system osc = harm_osc();
+//    func_dgl_p func(func_osc_contrl, 2, 1, 0);
+
+//    const_function w_func(y_target, 1, 1);
+
+//    state_controller contr(2, 1, 0, 1, matrix(std::vector<rnum>{0,18},1));
+
+//    vec x_start(2);
+//    x_start[0] = 1;
+//    x_start[1] = 0;
+
+//    dgl_rungekutta solver(d_t, &func);
+
+//    stationary_filter filt(1,1, matrix(std::vector<rnum>{10},1));
+
+//    simulator_prefilter sim(&solver, &func, &contr, x_start, d_t, 10, &filt, &w_func);
+//    sim.run();
+
+//    std::vector<time_value> x_result = sim.get_xresult();
+//    std::vector<time_value> u_result = sim.get_uresult();
+//    visualizer display(argc, argv);
+//    //display.visualize_result(&u_result, 0, &x_result, 0);
+//    display.visualize_result(x_result, std::vector<nnum>({0,1}), u_result, std::vector<nnum>({0}), x_result, std::vector<nnum>({0}));
+//    return 0;
+
+//    std::vector<rnum> np({1,1,1}), nq({1,2}), zeros({-1,-2});
+//    polynom p(np);
+//    polynom q(nq);
+//    std::cout << p << "\n" << q << "\n" << p * q << "\n" << polynom::zeros2polynom(zeros) << "\n";
+//    return 0;
 
     //std::cout << c/c << "\n";
     /*

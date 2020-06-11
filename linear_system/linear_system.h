@@ -75,7 +75,7 @@ public:
     matrix Q_S_red() const;
     matrix H() const;
 
-    matrix L() const;
+    matrix L(const polynom& ch_p) const;
 
     std::pair<matrix, std::vector<nnum>> H_y() const;
     std::vector<nnum> rel_deg() const;

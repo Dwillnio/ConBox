@@ -12,7 +12,7 @@ vec luenberger_observer::value(rnum t, const vec& x, const vec& u, const vec& z)
 {
     vec v(dim_x_);
 
-    v = A_ * x_est_ + B_ * u + E_ * z + L_*C_*(x_cur - x);
+    v = A_ * x + B_ * u + E_ * z + L_*C_*(x_cur - x_est_);
 
     return v;
 }

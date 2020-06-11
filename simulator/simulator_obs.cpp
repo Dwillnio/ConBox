@@ -32,7 +32,7 @@ void simulator_obs::step()
 vec simulator_obs::calc_u(const vec& z_cur, const vec& w_cur)
 {
     vec u_cur = contr_->compute(t, observer_->get(), z_cur, w_cur) + filter_->compute(t, w_cur);
-    observer_->compute(t, x_cur_, u_cur, z_cur);
     x_estimates.push_back(time_value(t, observer_->get()));
+    observer_->compute(t, x_cur_, u_cur, z_cur);
     return u_cur;
 }

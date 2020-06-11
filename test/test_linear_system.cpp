@@ -15,7 +15,7 @@ void linear_system_test_1(std::ostream& os)
     linear_system cnf = ls.control_normal_form();
     os << cnf.A_mat() << cnf.B_mat();
     os << "\nFeedbackmatrix Ackermann EV 2x -1:\n";
-    matrix K = ls.feedback_ackermann(polynom(std::vector<rnum>{1,4,6,4,1}));
+    matrix K = ls.feedback_ackermann(polynom({1,4,6,4,1}));
     os << K;
 }
 
@@ -34,7 +34,7 @@ void linear_system_test_2(std::ostream& os)
     linear_system cnf = ls.control_normal_form();
     os << cnf.A_mat() << cnf.B_mat();
     os << "\nFeedbackmatrix Ackermann EV 2x -1:\n";
-    matrix K = ls.feedback_ackermann(polynom(std::vector<rnum>{1,2,1}));
+    matrix K = ls.feedback_ackermann(polynom({1,2,1}));
     os << K;
     os << "\nStatic prefilter:\n";
     matrix S = ls.static_prefilter(K);

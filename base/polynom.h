@@ -11,7 +11,7 @@
 class polynom
 {
 public:
-    polynom(const std::vector<rnum>& coefficients) : coeff(coefficients) {if(coeff.empty()) coeff.push_back(0);}
+    polynom(const std::initializer_list<rnum>& coefficients) : coeff(coefficients) {if(coeff.empty()) coeff.push_back(0);}
     explicit polynom(rnum constant, nnum power);
     polynom(rnum constant) : polynom(constant,0) {}
     polynom() : polynom(0) {}

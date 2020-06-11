@@ -71,6 +71,7 @@ add_executable(ConBox
 
     example/harm_osc.cpp
     example/pendel_wagen_lin.cpp
+    example/inverted_pend_lin.cpp
 )
 
 include_directories(ConBox Public .)

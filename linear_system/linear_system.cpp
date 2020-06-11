@@ -130,15 +130,16 @@ matrix linear_system::T_S() const
         return T;
     } else {
         std::vector<nnum> ind = contr_ind();
+        matrix test = Q_S_red();
         matrix qsrinv = Q_S_red().inverse();
 
         matrix t(B.cols(), A.cols());
         nnum ind_sum = 0;
-        for(nnum i = 0; i < t.cols(); i++){
+        for(nnum i = 0; i < t.rows(); i++){
             vec e(A.cols());
             e[ind_sum + ind[i]] = 1;
             ind_sum += ind[i];
-            t.repl_row(i, e * qsrinv);
+            t = t.repl_row(i, e * qsrinv);
         }
 
         matrix T(A.rows(), A.cols());
@@ -146,7 +147,7 @@ matrix linear_system::T_S() const
         for(nnum i = 0; i < ind.size(); i++){
             vec temp = t.row(i);
             for(nnum j = 0; j < ind[i]; j++){
-                t.repl_row(sum + j, temp);
+                T = T.repl_row(sum + j, temp);
                 temp = temp * A;
             }
             sum += ind[i];
@@ -263,7 +264,7 @@ matrix linear_system::H() const
         vec e(A.cols());
         e[ind_sum + ind[i]] = 1;
         ind_sum += ind[i];
-        t.repl_row(i, e * qsrinv);
+        t = t.repl_row(i, e * qsrinv);
     }
 
     for(nnum i = 0; i < ind.size(); i++){
@@ -271,7 +272,7 @@ matrix linear_system::H() const
         for(nnum j = 0; j < i; j++){
             temp = temp * A;
         }
-        matH.repl_row(i, t.row(i) * temp);
+        matH = matH.repl_row(i, t.row(i) * temp);
     }
 
     return matH;
@@ -335,7 +336,7 @@ matrix linear_system::feedback_ackermann(const std::vector<polynom>& pols) const
             for(nnum j = 0; j<=pols[i].deg_c(); j++){
                 sum += pols[i][j] * A.power(j);
             }
-            temp.repl_row(i,t.row(i)*sum);
+            temp = temp.repl_row(i,t.row(i)*sum);
         }
 
         return H().inverse() * temp;
@@ -399,7 +400,7 @@ matrix linear_system::feedback_decoupling(const std::vector<polynom>& pols) cons
             for(nnum j = 0; j<=pols[i].deg_c(); j++){
                 sum += pols[i][j] * A.power(j);
             }
-            temp.repl_row(i,C.row(i)*sum);
+            temp = temp.repl_row(i,C.row(i)*sum);
         }
 
         return hy.inverse() * temp;
@@ -463,10 +464,10 @@ std::vector<nnum> linear_system::contr_ind() const
     std::vector<nnum> ind(B.cols(), UINT_MAX);
     nnum rank_prev = 0;
     for(nnum i = 0; i < qs.cols(); i++){
-        matrix temp = qs.block(qs.rows(), i);
+        matrix temp = qs.block(qs.rows(), i+1);
         nnum rank_cur = temp.rank();
         if(rank_prev == rank_cur && ind[i%B.cols()] == UINT_MAX){
-            ind[i%B.cols()] = i/B.cols() + 1;
+            ind[i%B.cols()] = i/B.cols();
         }
         rank_prev = rank_cur;
     }
@@ -482,14 +483,23 @@ matrix linear_system::Q_S_red() const
     std::vector<nnum> ind = contr_ind();
 
     nnum sum = 0;
-    for(nnum index: ind){
-        vec temp = B.col(index);
+    for(nnum i = 0; i < ind.size(); i++){
+        nnum index = ind[i];
+        vec temp = B.col(i);
         for(nnum j = 0; j < index; j++){
-            qsred.repl_col(sum + j, temp);
+            qsred = qsred.repl_col(sum + j, temp);
             temp = A * temp;
         }
         sum += index;
     }
+//    for(nnum index: ind){
+//        vec temp = B.col(index);
+//        for(nnum j = 0; j < index; j++){
+//            qsred.repl_col(sum + j, temp);
+//            temp = A * temp;
+//        }
+//        sum += index;
+//    }
 
     return qsred;
 }
@@ -505,7 +515,7 @@ matrix linear_system::t_S() const
         vec e(A.cols());
         e[ind_sum + ind[i]] = 1;
         ind_sum += ind[i];
-        t.repl_row(i, e * qsrinv);
+        t = t.repl_row(i, e * qsrinv);
     }
 
     return t;
@@ -524,6 +534,25 @@ matrix linear_system::static_prefilter(const matrix& K)  const
     matrix m3 = m2*B;
     matrix m4 = m3.inverse();
     return m4;
+}
+
+
+matrix linear_system::L(const polynom& ch_p) const
+{
+    if(SISO()){
+        matrix sum(A.rows(), A.cols());
+        matrix temp = matrix::unit(A.rows());
+        for(nnum i = 0; i <= ch_p.deg_c(); i++){
+            sum += ch_p[i] * temp;
+            temp = temp * A;
+        }
+        matrix q = Q_B();
+        q = q.inverse();
+        vec t = Q_B().inverse().col(A.rows()-1);
+        return matrix(sum * t);
+    } else {
+        throw new std::runtime_error("NOT IMPLEMENTED FOR MIMO");
+    }
 }
 
 

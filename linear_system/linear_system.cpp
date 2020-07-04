@@ -133,14 +133,15 @@ matrix linear_system::T_S() const
         matrix test = Q_S_red();
         matrix qsrinv = Q_S_red().inverse();
 
-        matrix t(B.cols(), A.cols());
-        nnum ind_sum = 0;
-        for(nnum i = 0; i < t.rows(); i++){
-            vec e(A.cols());
-            e[ind_sum + ind[i]] = 1;
-            ind_sum += ind[i];
-            t = t.repl_row(i, e * qsrinv);
-        }
+        matrix t = t_S();
+//        matrix t(B.cols(), A.cols());
+//        nnum ind_sum = 0;
+//        for(nnum i = 0; i < t.rows(); i++){
+//            vec e(A.cols());
+//            e[ind_sum + ind[i]] = 1;
+//            ind_sum += ind[i];
+//            t = t.repl_row(i, e * qsrinv);
+//        }
 
         matrix T(A.rows(), A.cols());
         nnum sum = 0;
@@ -509,11 +510,11 @@ matrix linear_system::t_S() const
     matrix qsrinv = Q_S_red().inverse();
     std::vector<nnum> ind = contr_ind();
 
-    matrix t(B.cols(), A.cols());
+    matrix t(B.cols(), A.rows());
     nnum ind_sum = 0;
-    for(nnum i = 0; i < t.cols(); i++){
+    for(nnum i = 0; i < t.rows(); i++){
         vec e(A.cols());
-        e[ind_sum + ind[i]] = 1;
+        e[ind_sum + ind[i]-1] = 1;
         ind_sum += ind[i];
         t = t.repl_row(i, e * qsrinv);
     }

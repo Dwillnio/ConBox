@@ -74,6 +74,7 @@ add_executable(ConBox
     example/inverted_pend_lin.cpp
 )
 
+target_link_libraries(ConBox Qt5::Widgets Qt5::Charts)
+
 include_directories(ConBox Public .)
 
-target_link_libraries(ConBox Qt5::Widgets Qt5::Charts)

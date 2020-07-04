@@ -32,7 +32,7 @@
 
 using namespace std;
 
-//TODO: tests for different systems, observer, mimo, 2dof trajectory control, parameter estimation, digital control, optimization, nonlinear, animation gui
+//TODO: tests for different systems, mimo, 2dof trajectory control, parameter estimation, digital control, optimization, nonlinear, animation gui
 
 vec func_e(rnum t, const vec& x, const vec& u, const vec& z)
 {
@@ -141,14 +141,23 @@ int main(int argc, char** argv)
 //        std::cout << i << " , ";
 //    std::cout << std::endl;
 
-//    matrix A2({0,0,1,0, 1,0,2,0, 0,1,3,1, 0,0,-1,2}, 4), B2({1,0, 0,0, 0,0, 0,1}, 4), C2(matrix::unit(4));
-//    linear_system exampl2(A2,B2,C2);
-//    auto cind2 = exampl2.contr_ind();
-//    for(nnum i: cind2)
-//        std::cout << i << " , ";
-//    std::cout << std::endl;
+    matrix A2({0,0,1,0, 1,0,2,0, 0,1,3,1, 0,0,-1,2}, 4), B2({1,0, 0,0, 0,0, 0,1}, 4), C2({1,0,0,0},1);
+    linear_system exampl2(A2,B2,C2);
+    auto cind2 = exampl2.contr_ind();
+    for(nnum i: cind2)
+        std::cout << i << " , ";
+    std::cout << std::endl;
 
-//    std::cout << exampl2.control_normal_form().A_mat();
+    //std::cout << exampl2.Q_S();
+    //std::cout << exampl2.Q_S_red().inverse() << std::endl;
+    //std::cout << exampl2.t_S();
+    //std::cout << exampl2.T_S();
+
+    std::cout << exampl2.control_normal_form().A_mat() << std::endl;
+    std::cout << exampl2.control_normal_form().B_mat() << std::endl;
+    std::cout << exampl2.control_normal_form().C_mat() << std::endl;
+
+    return 0;
 
     linear_system invpend = inv_pend_lin(false);
     rnum d_t = 0.01;

@@ -53,8 +53,8 @@ public:
 
     matrix feedback_ackermann(const polynom& ch_p) const;
     matrix feedback_ackermann(const std::vector<polynom>& pols) const;
-    matrix feedback_decoupling(const polynom& ch_p) const;
-    matrix feedback_decoupling(const std::vector<polynom>& pols) const;
+    matrix feedback_decoupling(const polynom& ch_p) const;              //DO NOT USE
+    matrix feedback_decoupling(const std::vector<polynom>& pols) const; //DO NOT USE
     matrix feedback_disturbance() const;
     matrix static_prefilter(const matrix& K) const;
 
@@ -73,12 +73,12 @@ public:
 
     matrix t_S() const;
     matrix Q_S_red() const;
-    matrix H() const;
+    matrix H() const;       //DO NOT USE
 
     matrix L(const polynom& ch_p) const;
 
-    std::pair<matrix, std::vector<nnum>> H_y() const;
-    std::vector<nnum> rel_deg() const;
+    std::pair<matrix, std::vector<nnum>> H_y() const; //DO NOT USE
+    std::vector<nnum> rel_deg() const;  //DO NOT USE
     std::vector<nnum> contr_ind() const;
 
 protected:

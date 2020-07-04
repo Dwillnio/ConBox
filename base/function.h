@@ -13,6 +13,9 @@ public:
     nnum d_from() const {return dim_from;}
     nnum d_to() const {return dim_to;}
 
+    vec operator() (const vec& x)
+    {return value(x);}
+
 private:
     const nnum dim_from, dim_to;
 };

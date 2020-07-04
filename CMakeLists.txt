@@ -22,6 +22,10 @@ add_executable(ConBox
     base/computable.h
     base/cnum.cpp
     base/polynom.cpp
+    base/function_data.cpp
+    base/function_d.cpp
+    base/func_d_dgl.cpp
+    base/function_d_data.cpp
 
     gui/window.cpp
     gui/visualizer.cpp
@@ -33,6 +37,7 @@ add_executable(ConBox
     dgl_numeric/dgl_solver.cpp
     dgl_numeric/dgl_euler.cpp
     dgl_numeric/dgl_rungekutta.cpp
+    dgl_numeric/difference_eq_solver.cpp
 
     controller/dimensions.h
     controller/controller.cpp
@@ -45,6 +50,8 @@ add_executable(ConBox
 
     observer/observer.cpp
     observer/luenberger_observer.cpp
+    observer/kalman_filter.cpp
+    observer/kalman_filter_ext.cpp
 
     simulator/simulator.cpp
     simulator/simulator_2dof.cpp
@@ -56,6 +63,7 @@ add_executable(ConBox
     disturbance/disturbance_white.cpp
 
     linear_system/linear_system.cpp
+    linear_system/linear_system_d.cpp
 
     test/test.h
     test/test_matrix.cpp

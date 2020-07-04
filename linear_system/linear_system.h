@@ -73,7 +73,7 @@ public:
 
     matrix t_S() const;
     matrix Q_S_red() const;
-    matrix H() const;       //DO NOT USE
+    matrix H() const;
 
     matrix L(const polynom& ch_p) const;
 

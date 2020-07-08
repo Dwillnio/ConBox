@@ -52,6 +52,7 @@ add_executable(ConBox
     observer/luenberger_observer.cpp
     observer/kalman_filter.cpp
     observer/kalman_filter_ext.cpp
+    observer/kalman_filter_unsc.cpp
 
     simulator/simulator.cpp
     simulator/simulator_2dof.cpp
@@ -64,6 +65,9 @@ add_executable(ConBox
 
     linear_system/linear_system.cpp
     linear_system/linear_system_d.cpp
+
+    identification/det_least_squares.cpp
+    identification/stoch_least_squares.cpp
 
     test/test.h
     test/test_matrix.cpp

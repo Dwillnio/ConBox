@@ -36,8 +36,7 @@ class function_time : public function
 public:
 
     // d_from excludes t
-    function_time(rnum const_value, nnum d_from, nnum d_to) : function(d_from, d_to),
-        const_value_(const_value) {};
+    function_time(nnum d_from, nnum d_to) : function(d_from, d_to) {}
 
     virtual vec value(const vec& x)
     {
@@ -48,17 +47,7 @@ public:
         return value(x[0], temp);
     }
 
-    virtual vec value(rnum t, const vec& x)
-    {
-        vec temp(d_to());
-        for(unsigned i = 0; i < x.dimension(); i++)
-            temp[i] = const_value_;
-
-        return temp;
-    }
-
-private:
-    rnum const_value_;
+    virtual vec value(rnum t, const vec& x) = 0;
 };
 
 class const_function : public function

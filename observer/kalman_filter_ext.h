@@ -27,15 +27,25 @@ protected:
 
 };
 
-class kalman_filter_ext : public kalman_filter
+class kalman_filter_ext : public observer
 {
 public:
-    kalman_filter_ext(const linear_system_d& sys_, const vec& x0_,
+    kalman_filter_ext(func_dgl* f_func_, function_time* h_func_, const vec& x0_,
                       const matrix& P0_, const matrix& Q_, const matrix& R_,
-                      const func_matrix_lin& f_lin_, const func_matrix_lin& h_lin_);
+                      func_matrix_lin* f_lin_, func_matrix_lin* h_lin_)
+        : observer(f_func_->d_x(), f_func_->d_u(), f_func_->d_z(), h_func_->d_to()),
+          f_func(f_func_), h_func(h_func_),
+          P(P0_), Q(Q_), R(R_), f_lin(f_lin_), h_lin(h_lin_) {}
+
+    virtual const vec& compute(rnum t, const vec& x, const vec& u, const vec& z);
+
+    const matrix& uncertainty() {return P;}
 
 protected:
-    func_matrix_lin f_lin, h_lin;
+    func_dgl* f_func;
+    function_time* h_func;
+    matrix P, Q, R;
+    func_matrix_lin* f_lin,* h_lin;
 };
 
 #endif // KALMAN_FILTER_EXT_H

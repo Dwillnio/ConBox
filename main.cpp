@@ -21,6 +21,9 @@
 #include "base/cnum.h"
 #include "base/polynom.h"
 
+#include "observer/kalman_filter.h"
+#include "linear_system/linear_system_d.h"
+
 #include "test/test_cnum.h"
 #include "test/test_disturbance.h"
 #include "test/test_linear_system.h"
@@ -29,6 +32,8 @@
 
 #include "example/inverted_pend_lin.h"
 #include "example/pendel_wagen_lin.h"
+
+#include "disturbance/disturbance_white.h"
 
 using namespace std;
 
@@ -134,6 +139,51 @@ void display_result(int argc, char** argv, QLineSeries* data_x, QLineSeries* dat
 
 int main(int argc, char** argv)
 {
+    rnum dt = 0.01;
+    rnum ssig_u = 2, ssig_x = 10, ssig_n = 1;
+    matrix A({1,dt, 0,1},2);
+    matrix B({0,0},2);
+    matrix C({1,0},1);
+    matrix Q({dt*dt*dt/3, dt*dt/2, dt*dt/2, dt},2);
+    Q = ssig_u * Q;
+    matrix R(1,1);
+    R(0,0) = ssig_n;
+    matrix P({ssig_x, 0, 0, ssig_x},2);
+    linear_system sys(matrix({0,1,0,0},2), matrix({0,0},2), matrix({1,0},1));
+    linear_system_d dsys(A,B,C);
+
+    vec x_est_start({0,10});
+
+
+    kalman_filter obs(dsys, x_est_start, P, Q, R);
+    const nnum num_steps = 100;
+    const rnum path_length = 10;
+    disturbance_white dist(0,1,0,sqrt(ssig_n),false);
+    std::vector<time_value> x_estimates;
+    x_estimates.push_back(time_value(0, x_est_start));
+    std::vector<time_value> y_vals;
+    y_vals.push_back(time_value(0, vec({0})));
+    vec x_est = x_est_start;
+    std::vector<time_value> p_vals;
+    for(nnum i = 1; i < num_steps; i++){
+        rnum y = path_length / num_steps * i + dist.compute(0, vec(0))[0];
+        y_vals.push_back(time_value(i * dt, vec({y})));
+        x_est = obs.compute(i * dt, vec({y, 0}), vec(1), vec(0));
+        x_estimates.push_back(time_value(i * dt, x_est));
+        matrix p = obs.uncertainty();
+        p_vals.push_back(time_value(i*dt, vec({p(0,0), p(1,1), p(0,1)})));
+    }
+
+    std::vector<time_value> x_result;
+    for(nnum i = 0; i < num_steps; i++){
+        x_result.push_back(time_value(i*dt, vec({path_length / num_steps * i, path_length / (dt * num_steps)})));
+    }
+
+    visualizer display(argc, argv);
+    display.visualize_result(x_result, std::vector<nnum>({0,1}), p_vals, std::vector<nnum>({0,1,2}),
+                             y_vals, std::vector<nnum>({0}), x_estimates);
+    return 0;
+
 //    matrix A({0,3,2, 1,0,4, 0,1,0}, 3), B({0,1,2, 0,0,1, 1,0,0}, 3), C(matrix::unit(3));
 //    linear_system exampl(A,B,C);
 //    auto cind = exampl.contr_ind();
@@ -152,30 +202,30 @@ int main(int argc, char** argv)
 //    std::cout << exampl2.control_normal_form().C_mat() << std::endl;
 //    return 0;
 
-    linear_system invpend = inv_pend_lin(false);
-    rnum d_t = 0.01;
-    rnum y_target = 1;
-    const_function w_func(y_target, 1, 1);
-    matrix K(invpend.feedback_ackermann(polynom::zeros2polynom({-1,-1,-1,-1})));
-    state_controller contr(4, 1, 0, 1, K);
-    vec x_start({0,0,0.1,0});
-    vec x_est_start({0,0,0,0});
+//    linear_system invpend = inv_pend_lin(false);
+//    rnum d_t = 0.01;
+//    rnum y_target = 1;
+//    const_function w_func(y_target, 1, 1);
+//    matrix K(invpend.feedback_ackermann(polynom::zeros2polynom({-1,-1,-1,-1})));
+//    state_controller contr(4, 1, 0, 1, K);
+//    vec x_start({0,0,0.1,0});
+//    vec x_est_start({0,0,0,0});
 
-    dgl_rungekutta solver(d_t, &invpend);
-    stationary_filter filt(1,1, invpend.static_prefilter(K));
-    matrix L = invpend.L(polynom::zeros2polynom({-5,-5,-5,-5}));
-    luenberger_observer obs(x_est_start, d_t, invpend.A_mat(), invpend.B_mat(), invpend.C_mat(), L);
-    simulator_obs sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &obs, &w_func);
-    //simulator_prefilter sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &w_func);
-    sim.run();
+//    dgl_rungekutta solver(d_t, &invpend);
+//    stationary_filter filt(1,1, invpend.static_prefilter(K));
+//    matrix L = invpend.L(polynom::zeros2polynom({-5,-5,-5,-5}));
+//    luenberger_observer obs(x_est_start, d_t, invpend.A_mat(), invpend.B_mat(), invpend.C_mat(), L);
+//    simulator_obs sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &obs, &w_func);
+//    //simulator_prefilter sim(&solver, &invpend, &contr, x_start, d_t, 10, &filt, &w_func);
+//    sim.run();
 
-    std::vector<time_value> x_result = sim.get_xresult();
-    std::vector<time_value> u_result = sim.get_uresult();
-    std::vector<time_value> x_est_result = sim.get_x_estimates();
-    //std::vector<time_value> x_est_result = sim.get_xresult();
-    visualizer display(argc, argv);
-    display.visualize_result(x_result, std::vector<nnum>({2}), u_result, std::vector<nnum>({0}), x_result, std::vector<nnum>({2}), x_est_result);
-    return 0;
+//    std::vector<time_value> x_result = sim.get_xresult();
+//    std::vector<time_value> u_result = sim.get_uresult();
+//    std::vector<time_value> x_est_result = sim.get_x_estimates();
+//    //std::vector<time_value> x_est_result = sim.get_xresult();
+//    visualizer display(argc, argv);
+//    display.visualize_result(x_result, std::vector<nnum>({2}), u_result, std::vector<nnum>({0}), x_result, std::vector<nnum>({2}), x_est_result);
+//    return 0;
 
 //    rnum d_t = 0.01;
 //    rnum y_target = -2;

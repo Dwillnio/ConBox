@@ -4,11 +4,15 @@
 #include "base/matrix.h"
 #include "controller/dimensions.h"
 #include "base/func_d_dgl.h"
+#include "linear_system.h"
 
 class linear_system_d : public func_d_dgl
 {
 public:
-    linear_system_d(const matrix& A_, const matrix& B_, const matrix& C_);
+    linear_system_d(const matrix& A_, const matrix& B_, const matrix& C_)
+        : linear_system_d(A_, B_, C_, matrix(A_.rows(),0)){}
+
+    linear_system_d(const linear_system& sys_);
 
     linear_system_d(const matrix& A_, const matrix& B_, const matrix& C_, const matrix& E_)
         : func_d_dgl(A_.rows(), B_.cols(), E_.cols()), A(A_), B(B_), C(C_), E(E_)
@@ -40,6 +44,8 @@ public:
     const matrix& B_mat() const {return B;}
     const matrix& C_mat() const {return C;}
     const matrix& E_mat() const {return E;}
+
+    static linear_system_d convert(const linear_system& sys);
 
 protected:
     matrix A, B, C, E;

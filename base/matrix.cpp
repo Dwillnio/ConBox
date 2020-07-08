@@ -229,6 +229,11 @@ matrix matrix::unit(nnum d)
     return m;
 }
 
+matrix matrix::zero(nnum d)
+{
+    return MatrixXd(d,d);
+}
+
 matrix matrix::block(nnum offset_rows, nnum offset_cols, nnum r, nnum c) const
 {
     if(r+offset_rows > rows() || c + offset_cols > cols())

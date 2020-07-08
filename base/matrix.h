@@ -107,6 +107,7 @@ public:
     MatrixXd eigenrep() const {return MatrixXd(*(reinterpret_cast<const MatrixXd*>(this)));}
 
     static matrix unit(nnum d);
+    static matrix zero(nnum d);
 };
 
 

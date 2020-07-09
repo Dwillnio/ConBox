@@ -65,6 +65,8 @@ cnum& cnum::operator/= (cnum c)
     cnum cinv(c.real/len, -c.imag/len);
 
     *this *= cinv;
+
+    return *this;
 }
 
 /*

@@ -1,7 +1,7 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#define rnum    double
-#define nnum    unsigned int
+typedef double rnum;
+typedef unsigned int nnum;
 
 #endif

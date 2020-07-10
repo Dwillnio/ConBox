@@ -6,6 +6,8 @@
 #include <cmath>
 
 #include <eigen3/Eigen/Dense>
+#include <eigen3/unsupported/Eigen/MatrixFunctions>
+
 
 #include "definitions.h"
 #include "vec.h"
@@ -87,8 +89,8 @@ public:
     matrix extend_full() const; //extend() until rows = cols
 
 #define STANDARD_CUTOFF 10
-    matrix exp(nnum cutoff = STANDARD_CUTOFF) const;
-    matrix log(nnum cutoff = STANDARD_CUTOFF) const;
+    //matrix exp(nnum cutoff = STANDARD_CUTOFF) const;
+    //matrix log(nnum cutoff = STANDARD_CUTOFF) const;
 
     matrix block(nnum rows, nnum cols) const {return block(0,0,rows,cols);}
     matrix block(nnum offset_rows, nnum offset_cols, nnum rows, nnum cols) const;

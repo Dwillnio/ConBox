@@ -71,34 +71,34 @@ nnum factorial(nnum n)
     return n*factorial(n-1);
 }
 
-matrix matrix::exp(nnum cutoff) const
-{
-    if(cols() != rows())
-        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
+//matrix matrix::exp(nnum cutoff) const
+//{
+//    if(cols() != rows())
+//        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
 
-    matrix temp(rows(),cols());
-    for(; cutoff >=0 ; cutoff--){
-        temp = temp * (*this);
-        temp += (1/factorial(cutoff)) * matrix::unit(rows());
-    }
+//    matrix temp(rows(),cols());
+//    for(; cutoff >=0 ; cutoff--){
+//        temp = temp * (*this);
+//        temp += (1/factorial(cutoff)) * matrix::unit(rows());
+//    }
 
-    return temp;
-}
+//    return temp;
+//}
 
-matrix matrix::log(nnum cutoff) const
-{
-    if(cols() != rows())
-        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
+//matrix matrix::log(nnum cutoff) const
+//{
+//    if(cols() != rows())
+//        throw new std::runtime_error("MATRIX NOT SQUARE(EXP)");
 
-    matrix R = (matrix::unit(rows()) - *this) * (*this + matrix::unit(rows())).inverse();
+//    matrix R = (matrix::unit(rows()) - *this) * (*this + matrix::unit(rows())).inverse();
 
-    matrix sum(rows(), cols());
-    for(nnum i = 1; i <= cutoff; i++){
-        sum += 1/(2*i + 1) * R.power(2*i + 1);
-    }
+//    matrix sum(rows(), cols());
+//    for(nnum i = 1; i <= cutoff; i++){
+//        sum += 1/(2*i + 1) * R.power(2*i + 1);
+//    }
 
-    return -2 * sum;
-}
+//    return -2 * sum;
+//}
 
 
 matrix matrix::operator* (const matrix& m) const

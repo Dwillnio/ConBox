@@ -9,5 +9,6 @@
 
 void linear_system_test_1(std::ostream& os = std::cout);
 void linear_system_test_2(std::ostream& os = std::cout);
+void linear_system_test_3(std::ostream& os = std::cout);
 
 #endif // TEST_LINEAR_SYSTEM_H

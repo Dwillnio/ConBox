@@ -80,6 +80,7 @@ add_executable(ConBox
     test/test_observer.cpp
     test/test_controller.cpp
     test/test_simulator.cpp
+    test/test_kalman_filter.cpp
 
     example/harm_osc.cpp
     example/pendel_wagen_lin.cpp
@@ -88,5 +89,8 @@ add_executable(ConBox
 
 target_link_libraries(ConBox Qt5::Widgets Qt5::Charts)
 
-include_directories(ConBox Public .)
+include_directories(ConBox Public
+    .
+    /usr/include/eigen3
+)
 

@@ -45,7 +45,8 @@ public:
     const matrix& C_mat() const {return C;}
     const matrix& E_mat() const {return E;}
 
-    static linear_system_d convert(const linear_system& sys);
+    static linear_system_d convert(const linear_system& sys, rnum dt);
+    static matrix convert_noise(const matrix& A, const matrix& G, rnum dt);
 
 protected:
     matrix A, B, C, E;

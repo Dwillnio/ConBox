@@ -8,6 +8,7 @@
 #include "gui/visualizer.h"
 #include "dgl_numeric/dgl_euler.h"
 #include "dgl_numeric/dgl_rungekutta.h"
+#include "dgl_numeric/difference_eq_solver.h"
 
 #include "simulator/simulator.h"
 #include "simulator/simulator_prefilter.h"
@@ -20,6 +21,7 @@
 #include "base/matrix.h"
 #include "base/cnum.h"
 #include "base/polynom.h"
+#include "base/transfer_function.h"
 
 #include "observer/kalman_filter.h"
 #include "linear_system/linear_system_d.h"
@@ -33,8 +35,12 @@
 
 #include "example/inverted_pend_lin.h"
 #include "example/pendel_wagen_lin.h"
+#include "example/coupled_spring_oscillator.h"
 
 #include "disturbance/disturbance_white.h"
+
+#include "identification/det_least_squares.h"
+#include "identification/stoch_least_squares.h"
 
 using namespace std;
 
@@ -140,5 +146,66 @@ void display_result(int argc, char** argv, QLineSeries* data_x, QLineSeries* dat
 
 int main(int argc, char** argv)
 {
+    rnum dt = 0.2, T = 10;
+    transfer_function tf({1,2,1},{1},dt);
+    std::cout << tf << std::endl;
+    linear_system csys = tf.cnf();
+    linear_system_d dsys = linear_system_d::convert(csys, dt);
+    std::cout << "Continuous:\n" << csys.A_mat() << csys.B_mat();
+    std::cout << "\nDiscrete:\n" << dsys.A_mat() << dsys.B_mat();
+    difference_eq_solver solver(dt, &dsys);
+    vec x_cur(dsys.A_mat().rows());
+
+    const_function_d u_func(1,0,1);
+    std::vector<time_value> y_vals;
+    std::vector<time_value> x_vals;
+    std::vector<time_value> u_vals;
+    for(nnum i=0; i<T/dt; i++){
+        y_vals.push_back(time_value(i*dt, dsys.C_mat()*x_cur));
+        x_vals.push_back(time_value(i*dt, x_cur));
+        u_vals.push_back(time_value(i*dt, u_func.value(i,x_cur)));
+        x_cur = solver.step(i*dt, x_cur, u_func.value(i,x_cur), vec(0));
+    }
+
+
+    nnum order = 2;
+    vec y(y_vals.size()), y2(y_vals.size()-1);
+    vec u(y_vals.size()-1);
+    y[0] = y_vals[0].value_[0];
+    for(nnum i=0; i<y2.dimension(); i++){
+        y[i+1]=y_vals[i+1].value_[0];
+        y2[i]=y_vals[i+1].value_[0];
+        u[i]=u_vals[i].value_[0];
+    }
+    matrix m = compute_m(y, u, order);
+    vec v = project_vector_solution(m, y2);
+    std::cout << std::endl << "y_vals:" << y << "\nu_vals:" << u << "\nSolution:" << v << "\nM:" << m;
+
+    vec y_start({y_vals[0].value_[0], y_vals[1].value_[0]});
+    vec u_start({1,1});
+    matrix m0 = compute_m(y_start, u_start, order);
+    vec v0 = project_vector_solution(m0, {y_vals[1].value_[0], y_vals[2].value_[0]});
+    std::cout << "Solutions:\n";
+    std::cout << v0;
+    det_rlse identifier(m0, v0, order);
+    std::vector<time_value> thetas;
+    thetas.push_back({0,0*v0});
+    thetas.push_back({dt,v0});
+    for(nnum i=2; i<T/dt-1; i++){
+        vec theta = identifier.compute(y_vals[i].value_[0], u_vals[i].value_[0]);
+        thetas.push_back({i*dt,v0});
+    }
+
+    std::cout << thetas[thetas.size()-1].value_;
+    visualizer gui(argc, argv);
+    gui.visualize_result(x_vals, {0,1}, thetas, {0,1,2,3}, y_vals, {0}, std::vector<time_value>());
+
+    return 0;
+    //PUT TO COUPLED SPRING OSCILLATOR
+    linear_system sys = coupled_spring_oscillator(1,10,1,1,1,1);
+    std::cout << sys.t_S() << std::endl;
+    std::cout << sys.feedback_ackermann(polynom({1,3.5,5.5,4,1})) << std::endl;
+    std::cout << sys.H_y().second[0] << std::endl;
+    std::cout << sys.feedback_decoupling(polynom({1,3,3,1}));
     return 0;
 }

@@ -10,7 +10,7 @@ vec linear_system_d::y_val(const vec& x) const
     return C*x;
 }
 
-#define INTEGRATION_STEPS 100
+#define INTEGRATION_STEPS 1000
 linear_system_d linear_system_d::convert(const linear_system& sys, rnum dt)
 {
     matrix A_d = Eigen::MatrixXd((dt*sys.A_mat()).exp());
@@ -33,10 +33,9 @@ linear_system_d linear_system_d::convert(const linear_system& sys, rnum dt)
 }
 
 
-matrix linear_system_d::convert_noise(const matrix& A, const matrix& G, rnum dt)
+matrix linear_system_d::convert_noise(const matrix& A, const matrix& Q, rnum dt)
 {
     matrix accumulation(A.rows(), A.cols());
-    matrix Q = G*G.transpose();
 
     rnum h = dt/(INTEGRATION_STEPS+1);
 

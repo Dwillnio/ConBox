@@ -15,15 +15,15 @@ vec stoch_rlse::compute(const vec& m_new, rnum y_new, rnum r_v)
 vec stoch_rlse::compute(rnum y_new, rnum u_new, rnum r_v)
 {
     vec y(M.rows()+2);
-    for(nnum i=0; i<y.len()-2; i++)
+    for(nnum i=0; i<y.dimension()-2; i++)
         y[i] = M(i,0);
-    y[y.len()-2] = y_prev;
-    y[y.len()-1] = y_new;
+    y[y.dimension()-2] = y_prev;
+    y[y.dimension()-1] = y_new;
 
     vec u(M.rows()+1);
-    for(nnum i=0; i<u.len()-1; i++)
+    for(nnum i=0; i<u.dimension()-1; i++)
         u[i] = M(i,0);
-    u[u.len()-1] = u_new;
+    u[u.dimension()-1] = u_new;
 
     vec m = compute_mline(y,u,order,causal);
     return compute(m, y_new, r_v);

@@ -23,9 +23,9 @@ vec det_rlse::compute(const vec& m_new, rnum y_new)
         }
         M = M_tild;
         vec y(M.rows());
-        for(nnum i=0; i<y.len()-1; i++)
+        for(nnum i=0; i<y.dimension()-1; i++)
             y[i] = M(i+1,0);
-        y[y.len()-1] = y_new;
+        y[y.dimension()-1] = y_new;
 
         theta = project_vector_solution(M, y);
         return theta;
@@ -36,15 +36,15 @@ vec det_rlse::compute(const vec& m_new, rnum y_new)
 vec det_rlse::compute(rnum y_new, rnum u_new)
 {
     vec y(M.rows()+2);
-    for(nnum i=0; i<y.len()-2; i++)
+    for(nnum i=0; i<y.dimension()-2; i++)
         y[i] = M(i,0);
-    y[y.len()-2] = y_prev;
-    y[y.len()-1] = y_new;
+    y[y.dimension()-2] = y_prev;
+    y[y.dimension()-1] = y_new;
 
     vec u(M.rows()+1);
-    for(nnum i=0; i<u.len()-1; i++)
+    for(nnum i=0; i<u.dimension()-1; i++)
         u[i] = M(i,0);
-    u[u.len()-1] = u_new;
+    u[u.dimension()-1] = u_new;
 
     vec m = compute_mline(y,u,order,causal);
     return compute(m, y_new);
@@ -55,36 +55,37 @@ vec compute_mline(const vec& y, const vec& u, nnum n, bool causal)
     if(causal){
         vec m_new(2*n);
         for(nnum i=0; i<n; i++){
-            m_new[i] = y[y.len()-2-i];
-            m_new[n+i] = u[u.len()-1-i];
+            m_new[i] = y[y.dimension()-2-i];
+            m_new[n+i] = u[u.dimension()-1-i];
         }
         return m_new;
     } else{
         vec m_new(2*n+1);
         for(nnum i=0; i<n; i++){
-            m_new[i] = y[y.len()-2-i];
-            m_new[n+i+1] = u[u.len()-2-i];
+            m_new[i] = y[y.dimension()-2-i];
+            m_new[n+i+1] = u[u.dimension()-2-i];
         }
-        m_new[n+1] = u[u.len()-1];
+        m_new[n+1] = u[u.dimension()-1];
         return m_new;
     }
 }
 
+//y: y[0]...y[N], u[0]...u[N-1]
 matrix compute_m(const vec& y, const vec& u, nnum n, bool causal)
 {
     if(causal){
-        matrix m(y.len()-1, 2*n);
+        matrix m(y.dimension()-1, 2*n);
         for(nnum j=0; j<n; j++){
-            for(nnum i=0; i<m.rows()-j; j++){
+            for(nnum i=0; i<m.rows()-j; i++){
                 m(j+i,j) = y[i];
                 m(j+i,j+n) = u[i];
             }
         }
         return m;
     } else{
-        matrix m(y.len(), 2*n+1);
+        matrix m(y.dimension(), 2*n+1);
         for(nnum j=0; j<n; j++){
-            for(nnum i=0; i<m.rows()-1-j; j++){
+            for(nnum i=0; i<m.rows()-1-j; i++){
                 m(j+i+1,j) = y[i];
                 m(j+i+1,j+n+1) = u[i];
             }

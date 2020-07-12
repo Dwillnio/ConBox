@@ -7,6 +7,7 @@
 //deterministic recursive least squares estimator
 class det_rlse
 {
+public:
     det_rlse(const matrix& M0_, const vec& theta0_, nnum order_, bool causal_ = 1, rnum weight_ = 1)
         : order(order_), causal(causal_), weight(weight_), P(M0_.cols(), M0_.cols()), M(M0_), y_prev(0), theta(theta0_)
     {

@@ -1,4 +1,10 @@
- #include "linear_system.h"
+#include "linear_system.h"
+#include "base/transfer_function.h"
+
+
+linear_system::linear_system(const transfer_function& tf)
+: func_dgl(tf.cnf().A.rows(), tf.cnf().B.cols(), 0),
+  A(tf.cnf().A), B(tf.cnf().B), C(tf.cnf().C), E(matrix(tf.cnf().A.rows(), 0)){}
 
 vec linear_system::value(rnum t, const vec& x, const vec& u, const vec& z)
 {
@@ -472,6 +478,9 @@ std::vector<nnum> linear_system::contr_ind() const
         }
         rank_prev = rank_cur;
     }
+    for(nnum i=0; i<ind.size(); i++)
+        if(ind[i]==UINT_MAX)
+            ind[i]=A.cols();
 
     return ind;
 }

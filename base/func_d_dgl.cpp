@@ -3,21 +3,21 @@
 
 vec func_d_dgl::value(nnum k, const vec& x)
 {
-    if(x.len() != dx_from())
+    if(x.dimension() != dx_from())
         return vec(0);
 
     vec x_(d_x());
     vec u_(d_u());
     vec z_(d_z());
 
-    for(nnum i = 0; i < x_.len(); i++){
+    for(nnum i = 0; i < x_.dimension(); i++){
         x_[i] = x[i];
     }
-    for(nnum i = 0; i < u_.len(); i++){
-        u_[i] = x[x_.len()+i];
+    for(nnum i = 0; i < u_.dimension(); i++){
+        u_[i] = x[x_.dimension()+i];
     }
-    for(nnum i = 0; i < z_.len(); i++){
-        z_[i] = x[x_.len()+z_.len()+i];
+    for(nnum i = 0; i < z_.dimension(); i++){
+        z_[i] = x[x_.dimension()+z_.dimension()+i];
     }
 
     return value(k, x_, u_, z_);

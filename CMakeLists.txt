@@ -26,6 +26,7 @@ add_executable(ConBox
     base/function_d.cpp
     base/func_d_dgl.cpp
     base/function_d_data.cpp
+    base/transfer_function.cpp
 
     gui/window.cpp
     gui/visualizer.cpp
@@ -81,10 +82,13 @@ add_executable(ConBox
     test/test_controller.cpp
     test/test_simulator.cpp
     test/test_kalman_filter.cpp
+    test/test_linear_system_d.cpp
+    test/test_det_least_squares.cpp
 
     example/harm_osc.cpp
     example/pendel_wagen_lin.cpp
     example/inverted_pend_lin.cpp
+    example/coupled_spring_oscillator.cpp
 )
 
 target_link_libraries(ConBox Qt5::Widgets Qt5::Charts)

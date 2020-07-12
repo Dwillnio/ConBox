@@ -9,6 +9,8 @@
 #include "base/func_dgl.h"
 #include "controller/dimensions.h"
 
+class transfer_function;
+
 class linear_system : public func_dgl
 {
 public:
@@ -35,6 +37,8 @@ public:
         if(E.rows() != d.dim_x || E_.cols() != d.dim_z)
             throw new std::runtime_error("LINSYSTEM E DIM ERROR");
     }
+
+    linear_system(const transfer_function& tf);
 
     virtual vec value(rnum t, const vec& x, const vec& u, const vec& z);
     vec y_val(const vec& x) const;

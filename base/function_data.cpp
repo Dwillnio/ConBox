@@ -4,7 +4,7 @@
 
 vec function_data::value(const vec &x)
 {
-    if(x.len() != 1)
+    if(x.dimension() != 1)
         return vec(0);
 
     rnum t = x[0];

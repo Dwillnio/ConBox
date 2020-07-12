@@ -414,7 +414,7 @@ std::pair<matrix, matrix> matrix::QR_decomposition() const
 
     for(nnum i = 0; i<rows(); i++){
         vec u(Q.row(i));
-        rnum len = u.len();
+        rnum len = u.dimension();
 
         for(nnum j = 0; j<rows(); j++){
             Q(i,j) /= len;
@@ -490,7 +490,7 @@ vec matrix::eigenvector_to(rnum eigenvalue) const
 
     for(nnum i = 0; i<EV_INVIT_ITERATIONS; i++) {
         vec temp = m*v;
-        v = temp*(1/temp.len());
+        v = temp*(1/temp.dimension());
     }
 
     return v;
@@ -509,7 +509,7 @@ vec matrix::max_eigenvector() const
 
     for(nnum i = 0; i<EV_POWER_ITERATIONS; i++) {
         vec temp = (*this)*v;
-        v = temp*(1/temp.len());
+        v = temp*(1/temp.dimension());
     }
 
     return v;

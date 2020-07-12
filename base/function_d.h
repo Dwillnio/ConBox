@@ -21,4 +21,24 @@ private:
     const nnum dimx_from, dim_to;
 };
 
+class const_function_d : public function_d
+{
+public:
+    const_function_d(rnum const_value, nnum d_from, nnum d_to) : function_d(d_from, d_to),
+        const_value_(const_value) {};
+
+    virtual vec value(nnum k, const vec& x)
+    {
+        vec temp(d_to());
+        for(unsigned i = 0; i < x.dimension(); i++)
+            temp[i] = const_value_;
+
+        return temp;
+    }
+
+private:
+    rnum const_value_;
+};
+
+
 #endif // FUNCTION_D_H
